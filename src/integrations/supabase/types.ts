@@ -9,7 +9,148 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      chat_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          messages: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      remedies: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          medication_dosage: string | null
+          medication_name: string | null
+          precautions: string | null
+          remedy_text: string
+          symptom_type: string
+          updated_at: string
+          urgency_level: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          medication_dosage?: string | null
+          medication_name?: string | null
+          precautions?: string | null
+          remedy_text: string
+          symptom_type: string
+          updated_at?: string
+          urgency_level?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          medication_dosage?: string | null
+          medication_name?: string | null
+          precautions?: string | null
+          remedy_text?: string
+          symptom_type?: string
+          updated_at?: string
+          urgency_level?: string | null
+        }
+        Relationships: []
+      }
+      symptom_scans: {
+        Row: {
+          ai_analysis: Json | null
+          created_at: string
+          id: string
+          image_url: string
+          medication_info: Json | null
+          remedy_suggestion: string | null
+          symptom_description: string | null
+          urgency_level: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          created_at?: string
+          id?: string
+          image_url: string
+          medication_info?: Json | null
+          remedy_suggestion?: string | null
+          symptom_description?: string | null
+          urgency_level?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          medication_info?: Json | null
+          remedy_suggestion?: string | null
+          symptom_description?: string | null
+          urgency_level?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "symptom_scans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

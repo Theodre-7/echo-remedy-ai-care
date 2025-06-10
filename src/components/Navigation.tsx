@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Menu, X, User, LogOut, Home, LayoutDashboard, Camera, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface NavigationProps {
   userType?: 'user' | 'admin' | 'guest';
@@ -10,9 +12,21 @@ interface NavigationProps {
 
 const Navigation = ({ userType = 'guest', userName }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const handleNavigation = (href: string) => {
+    navigate(href);
+    setIsMobileMenuOpen(false);
   };
 
   const getUserNavItems = () => {
@@ -44,7 +58,7 @@ const Navigation = ({ userType = 'guest', userName }: NavigationProps) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 cursor-pointer" onClick={() => handleNavigation('/')}>
             <h1 className="text-2xl font-bold text-primary">
               EchoRemedy
             </h1>
@@ -54,14 +68,14 @@ const Navigation = ({ userType = 'guest', userName }: NavigationProps) => {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
               {navItems.map((item) => (
-                <a
+                <button
                   key={item.name}
-                  href={item.href}
+                  onClick={() => handleNavigation(item.href)}
                   className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105 flex items-center gap-2"
                 >
                   <item.icon className="w-4 h-4" />
                   {item.name}
-                </a>
+                </button>
               ))}
             </div>
           </div>
@@ -77,16 +91,16 @@ const Navigation = ({ userType = 'guest', userName }: NavigationProps) => {
                     </div>
                     <span className="font-medium">{userName || 'User'}</span>
                   </div>
-                  <Button variant="ghost" size="sm" className="text-foreground hover:text-danger">
+                  <Button variant="ghost" size="sm" className="text-foreground hover:text-red-600" onClick={handleSignOut}>
                     <LogOut className="w-4 h-4" />
                   </Button>
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleNavigation('/auth')}>
                     Sign In
                   </Button>
-                  <Button size="sm" className="bg-primary hover:bg-primary/90">
+                  <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => handleNavigation('/auth')}>
                     Get Started
                   </Button>
                 </div>
@@ -117,15 +131,14 @@ const Navigation = ({ userType = 'guest', userName }: NavigationProps) => {
         <div className="md:hidden glass border-t border-border">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {navItems.map((item) => (
-              <a
+              <button
                 key={item.name}
-                href={item.href}
-                className="text-foreground hover:text-primary block px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center gap-2"
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => handleNavigation(item.href)}
+                className="text-foreground hover:text-primary block px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center gap-2 w-full text-left"
               >
                 <item.icon className="w-4 h-4" />
                 {item.name}
-              </a>
+              </button>
             ))}
             
             {userType !== 'guest' ? (
@@ -136,17 +149,17 @@ const Navigation = ({ userType = 'guest', userName }: NavigationProps) => {
                   </div>
                   <span className="font-medium">{userName || 'User'}</span>
                 </div>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-danger hover:text-danger">
+                <Button variant="ghost" size="sm" className="w-full justify-start text-red-600 hover:text-red-700" onClick={handleSignOut}>
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
                 </Button>
               </div>
             ) : (
               <div className="border-t border-border pt-4 mt-4 space-y-2">
-                <Button variant="ghost" size="sm" className="w-full">
+                <Button variant="ghost" size="sm" className="w-full" onClick={() => handleNavigation('/auth')}>
                   Sign In
                 </Button>
-                <Button size="sm" className="w-full bg-primary hover:bg-primary/90">
+                <Button size="sm" className="w-full bg-primary hover:bg-primary/90" onClick={() => handleNavigation('/auth')}>
                   Get Started
                 </Button>
               </div>
