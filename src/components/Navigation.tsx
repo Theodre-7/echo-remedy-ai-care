@@ -54,7 +54,7 @@ const Navigation = ({ userType = 'guest', userName }: NavigationProps) => {
   const navItems = getUserNavItems();
 
   return (
-    <nav className="crystal-nav">
+    <nav className="crystal-nav transition-all duration-300 hover:bg-white/20 hover:backdrop-blur-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
