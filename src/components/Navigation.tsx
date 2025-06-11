@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Menu, X, User, LogOut, Home, LayoutDashboard, Camera, MessageCircle } from 'lucide-react';
+import { Menu, X, User, LogOut, Home, LayoutDashboard, Camera, MessageCircle, BookOpen, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -32,6 +32,8 @@ const Navigation = ({ userType = 'guest', userName }: NavigationProps) => {
   const getUserNavItems = () => {
     if (userType === 'admin') {
       return [
+        { name: 'Home', href: '/', icon: Home },
+        { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
         { name: 'Submissions', href: '/admin/submissions', icon: LayoutDashboard },
         { name: 'Remedies', href: '/admin/remedies', icon: MessageCircle },
       ];
@@ -42,7 +44,8 @@ const Navigation = ({ userType = 'guest', userName }: NavigationProps) => {
         { name: 'Home', href: '/', icon: Home },
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
         { name: 'Scan', href: '/scan', icon: Camera },
-        { name: 'Chat with Medxo', href: '/chat', icon: MessageCircle },
+        { name: 'Journal', href: '/journal', icon: BookOpen },
+        { name: 'Health Tips', href: '/health-tips', icon: Heart },
       ];
     }
 

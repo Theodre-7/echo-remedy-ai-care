@@ -9,8 +9,11 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Scan from "./pages/Scan";
+import Journal from "./pages/Journal";
+import HealthTips from "./pages/HealthTips";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
+import MedxoChatbot from "./components/MedxoChatbot";
 
 const queryClient = new QueryClient();
 
@@ -34,9 +37,20 @@ const App = () => (
                 <Scan />
               </ProtectedRoute>
             } />
+            <Route path="/journal" element={
+              <ProtectedRoute>
+                <Journal />
+              </ProtectedRoute>
+            } />
+            <Route path="/health-tips" element={
+              <ProtectedRoute>
+                <HealthTips />
+              </ProtectedRoute>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <MedxoChatbot autoShow={false} />
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
