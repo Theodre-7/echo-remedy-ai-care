@@ -110,36 +110,48 @@ export type Database = {
       symptom_scans: {
         Row: {
           ai_analysis: Json | null
+          confidence_score: number | null
           created_at: string
+          home_remedies: Json | null
           id: string
           image_url: string
           medication_info: Json | null
+          medications: Json | null
           remedy_suggestion: string | null
           symptom_description: string | null
           urgency_level: string | null
           user_id: string
+          wound_classification: string | null
         }
         Insert: {
           ai_analysis?: Json | null
+          confidence_score?: number | null
           created_at?: string
+          home_remedies?: Json | null
           id?: string
           image_url: string
           medication_info?: Json | null
+          medications?: Json | null
           remedy_suggestion?: string | null
           symptom_description?: string | null
           urgency_level?: string | null
           user_id: string
+          wound_classification?: string | null
         }
         Update: {
           ai_analysis?: Json | null
+          confidence_score?: number | null
           created_at?: string
+          home_remedies?: Json | null
           id?: string
           image_url?: string
           medication_info?: Json | null
+          medications?: Json | null
           remedy_suggestion?: string | null
           symptom_description?: string | null
           urgency_level?: string | null
           user_id?: string
+          wound_classification?: string | null
         }
         Relationships: [
           {

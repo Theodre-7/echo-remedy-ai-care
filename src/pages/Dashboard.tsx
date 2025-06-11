@@ -1,17 +1,21 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, History, MessageCircle, Camera, Eye, Download, Calendar } from 'lucide-react';
+import { Upload, History, MessageCircle, Camera, Eye, Download, Calendar, Brain } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { generatePDFReport } from '@/services/pdfGenerationService';
 
 interface ScanResult {
   id: string;
   image_url: string;
   symptom_description: string | null;
+  wound_classification: string | null;
+  confidence_score: number | null;
+  home_remedies: any;
+  medications: any;
   ai_analysis: any;
   remedy_suggestion: string | null;
   urgency_level: string | null;
@@ -53,9 +57,7 @@ const Dashboard = () => {
   };
 
   const handleDownloadPDF = (scan: ScanResult) => {
-    // This would generate and download a PDF report
-    console.log('Downloading PDF for scan:', scan.id);
-    // Implementation would use a PDF generation library
+    generatePDFReport(scan);
   };
 
   const formatDate = (dateString: string) => {
@@ -87,7 +89,7 @@ const Dashboard = () => {
             Welcome back, {user?.user_metadata?.full_name?.split(' ')[0] || 'User'}!
           </h1>
           <p className="text-gray-600">
-            Track your health journey and view your symptom analysis history.
+            Track your health journey and view your AI-powered symptom analysis history.
           </p>
         </div>
 
@@ -106,8 +108,8 @@ const Dashboard = () => {
                   className="w-full justify-start" 
                   onClick={() => navigate('/scan')}
                 >
-                  <Upload className="w-4 h-4 mr-2" />
-                  New Scan
+                  <Brain className="w-4 h-4 mr-2" />
+                  AI Symptom Scan
                 </Button>
                 
                 <Button 
@@ -136,7 +138,7 @@ const Dashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <History className="w-5 h-5" />
-                  Recent Scans ({scans.length})
+                  Recent AI Scans ({scans.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -146,8 +148,8 @@ const Dashboard = () => {
                   </div>
                 ) : scans.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
-                    <History className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                    <p>No scans yet. Upload your first symptom photo to get started!</p>
+                    <Brain className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                    <p>No scans yet. Upload your first symptom photo for AI analysis!</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -162,8 +164,13 @@ const Dashboard = () => {
                             />
                             <div>
                               <h3 className="font-medium text-gray-900">
-                                {scan.symptom_description || 'Symptom Analysis'}
+                                {scan.wound_classification || scan.symptom_description || 'Symptom Analysis'}
                               </h3>
+                              {scan.confidence_score && (
+                                <p className="text-sm text-blue-600">
+                                  AI Confidence: {Math.round(scan.confidence_score * 100)}%
+                                </p>
+                              )}
                               <div className="flex items-center gap-2 mt-1">
                                 <Calendar className="w-4 h-4 text-gray-400" />
                                 <span className="text-sm text-gray-500">
@@ -210,7 +217,7 @@ const Dashboard = () => {
             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Scan Details</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">AI Scan Analysis</h2>
                   <Button 
                     variant="ghost" 
                     onClick={() => setSelectedScan(null)}
@@ -226,20 +233,53 @@ const Dashboard = () => {
                       alt="Scan" 
                       className="w-full rounded-lg"
                     />
+                    {selectedScan.wound_classification && (
+                      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <h4 className="font-semibold text-blue-900">AI Classification</h4>
+                        <p className="text-blue-700">{selectedScan.wound_classification}</p>
+                        {selectedScan.confidence_score && (
+                          <p className="text-sm text-blue-600">
+                            Confidence: {Math.round(selectedScan.confidence_score * 100)}%
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-6">
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">Natural Home Remedies</h3>
-                      <p className="text-gray-700">
-                        {selectedScan.remedy_suggestion || 'No specific remedies suggested for this scan.'}
-                      </p>
+                      <h3 className="font-semibold text-lg mb-2">Home Remedies</h3>
+                      {selectedScan.home_remedies ? (
+                        <ul className="space-y-1">
+                          {selectedScan.home_remedies.map((remedy: string, index: number) => (
+                            <li key={index} className="text-gray-700 text-sm">• {remedy}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-700">{selectedScan.remedy_suggestion || 'No specific remedies suggested for this scan.'}</p>
+                      )}
                     </div>
 
+                    {selectedScan.medications && (
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">Suggested Medications</h3>
+                        <div className="space-y-3">
+                          {selectedScan.medications.map((med: any, index: number) => (
+                            <div key={index} className="border rounded-lg p-3 bg-gray-50">
+                              <h4 className="font-medium text-primary">{med.name}</h4>
+                              <p className="text-sm"><strong>Dosage:</strong> {med.dosage}</p>
+                              <p className="text-sm"><strong>Frequency:</strong> {med.frequency}</p>
+                              <p className="text-sm text-gray-600">{med.precautions}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">AI-Summarized Health Analysis</h3>
+                      <h3 className="font-semibold text-lg mb-2">AI Analysis Summary</h3>
                       <p className="text-gray-700">
-                        {selectedScan.ai_analysis?.summary || 'Analysis data not available.'}
+                        {selectedScan.ai_analysis?.summary || selectedScan.symptom_description || 'Analysis data not available.'}
                       </p>
                     </div>
 

@@ -7,21 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, Camera, FileImage, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Upload, Camera, FileImage, AlertTriangle, CheckCircle, Clock, Brain } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface AnalysisResult {
-  symptomDescription: string;
-  homeRemedies: string[];
-  medications: {
-    name: string;
-    dosage: string;
-    frequency: string;
-    precautions: string;
-  }[];
-  urgencyLevel: 'low' | 'medium' | 'high';
-  aiSummary: string;
-}
+import { analyzeSymptomImage, uploadImageToStorage, saveScanToDatabase, type MLAnalysisResult } from '@/services/mlAnalysisService';
 
 const Scan = () => {
   const { user } = useAuth();
@@ -30,7 +18,8 @@ const Scan = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<MLAnalysisResult | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleFileSelect = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -72,54 +61,67 @@ const Scan = () => {
   };
 
   const analyzeImage = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !user) return;
 
     setIsAnalyzing(true);
     
-    // Simulate AI analysis (replace with actual API call)
-    setTimeout(() => {
-      const mockResult: AnalysisResult = {
-        symptomDescription: "Appears to be a minor skin irritation or rash with slight redness and inflammation",
-        homeRemedies: [
-          "Apply cool compress for 10-15 minutes",
-          "Use aloe vera gel for soothing effect",
-          "Keep the area clean and dry",
-          "Avoid scratching or rubbing the area"
-        ],
-        medications: [
-          {
-            name: "Hydrocortisone Cream 1%",
-            dosage: "Apply thin layer",
-            frequency: "2-3 times daily",
-            precautions: "For external use only. Discontinue if irritation worsens."
-          },
-          {
-            name: "Oral Antihistamine (Benadryl)",
-            dosage: "25mg",
-            frequency: "As needed for itching",
-            precautions: "May cause drowsiness. Consult doctor if pregnant."
-          }
-        ],
-        urgencyLevel: 'low',
-        aiSummary: "Based on the image analysis, this appears to be a minor skin condition that can typically be managed with over-the-counter treatments and home remedies. The affected area shows mild inflammation without signs of severe infection or concerning features. Monitor for any worsening symptoms such as increased redness, swelling, or pus formation."
-      };
-
-      setAnalysisResult(mockResult);
-      setIsAnalyzing(false);
+    try {
+      // Perform ML analysis
+      const result = await analyzeSymptomImage(selectedFile);
+      setAnalysisResult(result);
       
       toast({
         title: "Analysis Complete",
-        description: "Your symptom has been analyzed successfully",
+        description: `Detected: ${result.woundClassification} (${Math.round(result.confidenceScore * 100)}% confidence)`,
       });
-    }, 3000);
+    } catch (error) {
+      console.error('Analysis error:', error);
+      toast({
+        title: "Analysis Failed",
+        description: "Unable to analyze the image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const saveToDashboard = async () => {
+    if (!selectedFile || !analysisResult || !user) return;
+
+    setIsSaving(true);
+    
+    try {
+      // Upload image to storage
+      const imageUrl = await uploadImageToStorage(selectedFile, user.id);
+      
+      // Save scan results to database
+      await saveScanToDatabase(user.id, imageUrl, analysisResult);
+      
+      toast({
+        title: "Scan Saved",
+        description: "Your scan has been saved to your dashboard successfully!",
+      });
+      
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Save error:', error);
+      toast({
+        title: "Save Failed", 
+        description: "Unable to save scan results. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const getUrgencyColor = (level: string) => {
     switch (level) {
-      case 'low': return 'bg-success text-success-foreground';
-      case 'medium': return 'bg-warning text-warning-foreground';
-      case 'high': return 'bg-danger text-danger-foreground';
-      default: return 'bg-muted text-muted-foreground';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -143,11 +145,12 @@ const Scan = () => {
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Symptom Scanner
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+            <Brain className="w-8 h-8 text-primary" />
+            AI-Powered Symptom Scanner
           </h1>
           <p className="text-gray-600">
-            Upload a clear photo of your symptom for AI-powered analysis and remedy suggestions.
+            Upload a clear photo of your symptom for AI-powered analysis using advanced machine learning models.
           </p>
         </div>
 
@@ -214,12 +217,12 @@ const Scan = () => {
                         {isAnalyzing ? (
                           <>
                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                            Analyzing...
+                            Analyzing with AI...
                           </>
                         ) : (
                           <>
-                            <FileImage className="w-4 h-4 mr-2" />
-                            Analyze Image
+                            <Brain className="w-4 h-4 mr-2" />
+                            Analyze with AI
                           </>
                         )}
                       </Button>
@@ -235,18 +238,39 @@ const Scan = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  Analysis Results
-                  <Badge className={getUrgencyColor(analysisResult.urgencyLevel)}>
+                  AI Analysis Results
+                  <Badge className={`${getUrgencyColor(analysisResult.urgencyLevel)} border`}>
                     {getUrgencyIcon(analysisResult.urgencyLevel)}
                     {analysisResult.urgencyLevel.toUpperCase()} URGENCY
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Symptom Description */}
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Symptom Analysis</h3>
-                  <p className="text-gray-700">{analysisResult.symptomDescription}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <img
+                      src={previewUrl!}
+                      alt="Analyzed symptom"
+                      className="w-full rounded-lg shadow-md"
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Classification */}
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">ML Classification</h3>
+                      <p className="text-primary font-medium">{analysisResult.woundClassification}</p>
+                      <p className="text-sm text-gray-600">
+                        Confidence: {Math.round(analysisResult.confidenceScore * 100)}%
+                      </p>
+                    </div>
+
+                    {/* Symptom Description */}
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Analysis</h3>
+                      <p className="text-gray-700">{analysisResult.symptomDescription}</p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Home Remedies */}
@@ -255,7 +279,7 @@ const Scan = () => {
                   <ul className="space-y-2">
                     {analysisResult.homeRemedies.map((remedy, index) => (
                       <li key={index} className="flex items-start gap-2">
-                        <CheckCircle className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                         <span className="text-gray-700">{remedy}</span>
                       </li>
                     ))}
@@ -293,7 +317,7 @@ const Scan = () => {
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Medical Disclaimer:</strong> This is just an AI-analyzed summary. Consult with a doctor in case of severe symptoms or if your condition worsens. This tool is for informational purposes only and should not replace professional medical advice.
+                <strong>Medical Disclaimer:</strong> This AI analysis is for informational purposes only and should not replace professional medical advice. Consult with a healthcare provider for proper diagnosis and treatment, especially if symptoms worsen or persist.
               </AlertDescription>
             </Alert>
 
@@ -302,8 +326,19 @@ const Scan = () => {
               <Button variant="outline" onClick={() => window.location.reload()}>
                 Scan Another Image
               </Button>
-              <Button onClick={() => navigate('/dashboard')} className="bg-primary">
-                Save to Dashboard
+              <Button 
+                onClick={saveToDashboard} 
+                className="bg-primary"
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save to Dashboard'
+                )}
               </Button>
             </div>
           </div>
