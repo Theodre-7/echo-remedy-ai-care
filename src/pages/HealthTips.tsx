@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, Shield, Utensils, Moon, Dumbbell, Brain } from 'lucide-react';
+import { BeamsBackground } from '@/components/ui/beams-background';
 
 const HealthTips = () => {
   const { user } = useAuth();
@@ -78,31 +78,31 @@ const HealthTips = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <BeamsBackground intensity="subtle">
       <Navigation userType="user" userName={user?.user_metadata?.full_name || user?.email} />
       
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-32">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-            <Heart className="w-8 h-8 text-red-500" />
+          <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-2">
+            <Heart className="w-8 h-8 text-red-400" />
             Health Tips & Wellness
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-300">
             Daily tips on immunity, lifestyle, and seasonal illness prevention to keep you healthy.
           </p>
         </div>
 
         {/* Daily Featured Tip */}
-        <Card className="mb-8 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+        <Card className="mb-8 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-blue-400/30 backdrop-blur-md">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-800">
+            <CardTitle className="flex items-center gap-2 text-blue-300">
               <Heart className="w-6 h-6" />
               {dailyTip.title}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-blue-700 text-lg leading-relaxed">{dailyTip.content}</p>
-            <span className="inline-block mt-3 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+            <p className="text-blue-200 text-lg leading-relaxed">{dailyTip.content}</p>
+            <span className="inline-block mt-3 px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-medium">
               {dailyTip.category}
             </span>
           </CardContent>
@@ -111,9 +111,9 @@ const HealthTips = () => {
         {/* Health Tips Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tipCategories.map((category, index) => (
-            <Card key={index} className="hover:shadow-lg transition-shadow">
+            <Card key={index} className="hover:shadow-lg transition-shadow bg-white/10 backdrop-blur-md border-white/20">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-white">
                   <category.icon className="w-6 h-6 text-primary" />
                   {category.title}
                 </CardTitle>
@@ -123,7 +123,7 @@ const HealthTips = () => {
                   {category.tips.map((tip, tipIndex) => (
                     <li key={tipIndex} className="flex items-start gap-2">
                       <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-                      <span className="text-gray-700 text-sm">{tip}</span>
+                      <span className="text-gray-300 text-sm">{tip}</span>
                     </li>
                   ))}
                 </ul>
@@ -133,15 +133,15 @@ const HealthTips = () => {
         </div>
 
         {/* Additional Health Resources */}
-        <Card className="mt-8">
+        <Card className="mt-8 bg-white/10 backdrop-blur-md border-white/20">
           <CardHeader>
-            <CardTitle>Emergency Health Information</CardTitle>
+            <CardTitle className="text-white">Emergency Health Information</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-semibold mb-2 text-red-600">When to Seek Immediate Medical Attention:</h4>
-                <ul className="space-y-1 text-sm text-gray-700">
+                <h4 className="font-semibold mb-2 text-red-400">When to Seek Immediate Medical Attention:</h4>
+                <ul className="space-y-1 text-sm text-gray-300">
                   <li>• Difficulty breathing or shortness of breath</li>
                   <li>• Chest pain or pressure</li>
                   <li>• Severe headache with fever</li>
@@ -150,8 +150,8 @@ const HealthTips = () => {
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold mb-2 text-green-600">Home Remedy Essentials to Keep:</h4>
-                <ul className="space-y-1 text-sm text-gray-700">
+                <h4 className="font-semibold mb-2 text-green-400">Home Remedy Essentials to Keep:</h4>
+                <ul className="space-y-1 text-sm text-gray-300">
                   <li>• Honey (for coughs and sore throat)</li>
                   <li>• Ginger (for nausea and inflammation)</li>
                   <li>• Turmeric (natural anti-inflammatory)</li>
@@ -163,7 +163,7 @@ const HealthTips = () => {
           </CardContent>
         </Card>
       </main>
-    </div>
+    </BeamsBackground>
   );
 };
 
