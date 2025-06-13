@@ -215,7 +215,7 @@ export const generatePDFReport = (scanData: ScanData): void => {
           <div class="warning-signs">
             <h4>⚠️ Warning Signs to Watch For</h4>
             <ul>
-              ${scanData.ai_analysis.detailedAnalysis.warningSignsNotes?.map((sign: string) => `<li>${sign}</li>`).join('') || '<li>Monitor for worsening symptoms</li>'}
+              ${scanData.ai_analysis.detailedAnalysis.warningSigns?.map((sign: string) => `<li>${sign}</li>`).join('') || '<li>Monitor for worsening symptoms</li>'}
             </ul>
           </div>
         </div>

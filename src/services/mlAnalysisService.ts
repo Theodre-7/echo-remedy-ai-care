@@ -73,7 +73,7 @@ const ENHANCED_REMEDIES_DATABASE = {
       skinCondition: 'Fresh wound with clean edges showing minimal tissue damage',
       possibleCauses: ['Sharp object cut', 'Glass injury', 'Metal edge contact'],
       expectedHealingTime: '7-14 days with proper care',
-      warningSignsNotes: ['Increasing redness', 'Warmth', 'Pus formation', 'Red streaking']
+      warningSigns: ['Increasing redness', 'Warmth', 'Pus formation', 'Red streaking']
     }
   },
   'Contact Dermatitis': {
@@ -96,7 +96,7 @@ const ENHANCED_REMEDIES_DATABASE = {
       skinCondition: 'Inflammatory skin reaction with possible vesicles or scaling',
       possibleCauses: ['Chemical exposure', 'Plant allergens', 'Metal sensitivity', 'Cosmetic reaction'],
       expectedHealingTime: '1-3 weeks after removing trigger',
-      warningSignsNotes: ['Severe swelling', 'Blistering', 'Signs of infection', 'Breathing difficulty']
+      warningSigns: ['Severe swelling', 'Blistering', 'Signs of infection', 'Breathing difficulty']
     }
   },
   'Burn (2nd Degree)': {
@@ -119,7 +119,7 @@ const ENHANCED_REMEDIES_DATABASE = {
       skinCondition: 'Partial thickness burn with blistering and severe pain',
       possibleCauses: ['Heat exposure', 'Chemical burns', 'Electrical injury', 'Sun exposure'],
       expectedHealingTime: '2-3 weeks with potential scarring',
-      warningSignsNotes: ['Signs of infection', 'Increased pain after initial improvement', 'Fever', 'Large burned area']
+      warningSigns: ['Signs of infection', 'Increased pain after initial improvement', 'Fever', 'Large burned area']
     }
   }
 };
@@ -194,7 +194,7 @@ export const analyzeSymptomImage = async (file: File): Promise<MLAnalysisResult>
       skinCondition: 'Requires professional medical evaluation',
       possibleCauses: ['Various factors may contribute to this condition'],
       expectedHealingTime: 'Variable, depending on treatment',
-      warningSignsNotes: ['Worsening symptoms', 'Signs of infection', 'Persistent pain']
+      warningSigns: ['Worsening symptoms', 'Signs of infection', 'Persistent pain']
     }
   };
 
@@ -214,7 +214,7 @@ export const analyzeSymptomImage = async (file: File): Promise<MLAnalysisResult>
       skinCondition: remedyData.detailedAnalysis.skinCondition,
       possibleCauses: remedyData.detailedAnalysis.possibleCauses,
       expectedHealingTime: remedyData.detailedAnalysis.expectedHealingTime,
-      warningSignsNotes: remedyData.detailedAnalysis.warningSignsNotes
+      warningSigns: remedyData.detailedAnalysis.warningSigns
     }
   };
   
