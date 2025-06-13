@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import LoaderOne from '@/components/ui/loader-one';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,7 +21,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+        <div className="text-center">
+          <LoaderOne />
+          <p className="text-muted-foreground mt-4">Loading...</p>
+        </div>
       </div>
     );
   }

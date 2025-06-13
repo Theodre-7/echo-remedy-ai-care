@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
+import LoaderOne from '@/components/ui/loader-one';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -242,8 +242,8 @@ const Journal = () => {
             
             {loading ? (
               <div className="text-center py-8">
-                <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto"></div>
-                <p className="text-muted-foreground mt-2">Loading entries...</p>
+                <LoaderOne />
+                <p className="text-muted-foreground mt-4">Loading entries...</p>
               </div>
             ) : entries.length === 0 ? (
               <Card className="medical-card">

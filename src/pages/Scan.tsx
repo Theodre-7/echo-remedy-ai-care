@@ -1,8 +1,8 @@
-
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
+import LoaderOne from '@/components/ui/loader-one';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -216,8 +216,8 @@ const Scan = () => {
                       >
                         {isAnalyzing ? (
                           <>
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                            Analyzing with AI...
+                            <LoaderOne />
+                            <span className="ml-2">Analyzing with AI...</span>
                           </>
                         ) : (
                           <>
@@ -333,8 +333,8 @@ const Scan = () => {
               >
                 {isSaving ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                    Saving...
+                    <LoaderOne />
+                    <span className="ml-2">Saving...</span>
                   </>
                 ) : (
                   'Save to Dashboard'

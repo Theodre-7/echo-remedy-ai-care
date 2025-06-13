@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
+import LoaderOne from '@/components/ui/loader-one';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -89,7 +89,10 @@ const ScanHistory = () => {
       <div className="min-h-screen bg-gray-50">
         <Navigation userType="user" userName={user?.user_metadata?.full_name || user?.email} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">Loading scan history...</div>
+          <div className="text-center py-16">
+            <LoaderOne />
+            <p className="text-muted-foreground mt-4">Loading scan history...</p>
+          </div>
         </div>
       </div>
     );

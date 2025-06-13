@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
+import LoaderOne from '@/components/ui/loader-one';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Camera, MessageCircle, FileText, TrendingUp, Calendar, Clock, Target, History, Download } from 'lucide-react';
@@ -119,7 +119,9 @@ const Dashboard = () => {
                 <Camera className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{loading ? '...' : stats.totalScans}</div>
+                <div className="text-2xl font-bold">
+                  {loading ? <LoaderOne /> : stats.totalScans}
+                </div>
                 <p className="text-xs text-muted-foreground">CNN-powered analyses</p>
               </CardContent>
             </Card>
@@ -130,7 +132,9 @@ const Dashboard = () => {
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{loading ? '...' : stats.journalEntries}</div>
+                <div className="text-2xl font-bold">
+                  {loading ? <LoaderOne /> : stats.journalEntries}
+                </div>
                 <p className="text-xs text-muted-foreground">Health records tracked</p>
               </CardContent>
             </Card>
