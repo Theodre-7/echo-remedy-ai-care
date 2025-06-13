@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Scan from "./pages/Scan";
 import Journal from "./pages/Journal";
 import HealthTips from "./pages/HealthTips";
+import ScanHistory from "./pages/ScanHistory";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import MedxoChatbot from "./components/MedxoChatbot";
@@ -45,6 +46,11 @@ const App = () => (
             <Route path="/health-tips" element={
               <ProtectedRoute>
                 <HealthTips />
+              </ProtectedRoute>
+            } />
+            <Route path="/scan-history" element={
+              <ProtectedRoute>
+                <ScanHistory />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
