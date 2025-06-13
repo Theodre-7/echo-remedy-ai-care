@@ -1,304 +1,224 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, History, MessageCircle, Camera, Eye, Download, Calendar, Brain } from 'lucide-react';
+import { Camera, MessageCircle, FileText, TrendingUp, Calendar, Clock, Target } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { generatePDFReport } from '@/services/pdfGenerationService';
-
-interface ScanResult {
-  id: string;
-  image_url: string;
-  symptom_description: string | null;
-  wound_classification: string | null;
-  confidence_score: number | null;
-  home_remedies: any;
-  medications: any;
-  ai_analysis: any;
-  remedy_suggestion: string | null;
-  urgency_level: string | null;
-  created_at: string;
-}
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [scans, setScans] = useState<ScanResult[]>([]);
+  const [stats, setStats] = useState({
+    totalScans: 0,
+    journalEntries: 0,
+    recentActivity: 'No recent activity'
+  });
   const [loading, setLoading] = useState(true);
-  const [selectedScan, setSelectedScan] = useState<ScanResult | null>(null);
 
   useEffect(() => {
-    fetchUserScans();
+    const fetchStats = async () => {
+      if (!user) return;
+
+      try {
+        // Fetch scan count
+        const { count: scanCount } = await supabase
+          .from('symptom_scans')
+          .select('*', { count: 'exact', head: true });
+
+        // Fetch journal entries count
+        const { count: journalCount } = await supabase
+          .from('journal_entries')
+          .select('*', { count: 'exact', head: true });
+
+        setStats({
+          totalScans: scanCount || 0,
+          journalEntries: journalCount || 0,
+          recentActivity: scanCount || journalCount ? 'Recent health tracking activity detected' : 'No recent activity'
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
   }, [user]);
 
-  const fetchUserScans = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('symptom_scans')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setScans(data || []);
-    } catch (error) {
-      console.error('Error fetching scans:', error);
-    } finally {
-      setLoading(false);
+  const toggleChatbot = () => {
+    // This will trigger the MedxoChatbot to show
+    const chatButton = document.querySelector('[data-medxo-chat-toggle]') as HTMLButtonElement;
+    if (chatButton) {
+      chatButton.click();
+    } else {
+      // Fallback: dispatch custom event
+      window.dispatchEvent(new CustomEvent('medxo-chat-toggle'));
     }
   };
 
-  const handleViewDetails = (scan: ScanResult) => {
-    setSelectedScan(scan);
-  };
-
-  const handleDownloadPDF = (scan: ScanResult) => {
-    generatePDFReport(scan);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getUrgencyColor = (level: string | null) => {
-    switch (level) {
-      case 'high': return 'text-red-600 bg-red-50';
-      case 'medium': return 'text-yellow-600 bg-yellow-50';
-      case 'low': return 'text-green-600 bg-green-50';
-      default: return 'text-gray-600 bg-gray-50';
+  const quickActions = [
+    {
+      title: 'AI Symptom Scan',
+      description: 'Upload photos for instant analysis',
+      icon: Camera,
+      href: '/scan',
+      color: 'bg-blue-500'
+    },
+    {
+      title: 'Chat with Medxo',
+      description: 'Get personalized health guidance',
+      icon: MessageCircle,
+      onClick: toggleChatbot,
+      color: 'bg-green-500'
+    },
+    {
+      title: 'Health Journal',
+      description: 'Track symptoms and mood',
+      icon: FileText,
+      href: '/journal',
+      color: 'bg-purple-500'
+    },
+    {
+      title: 'Health Tips',
+      description: 'Discover wellness insights',
+      icon: TrendingUp,
+      href: '/health-tips',
+      color: 'bg-orange-500'
     }
-  };
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       <Navigation userType="user" userName={user?.user_metadata?.full_name || user?.email} />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.user_metadata?.full_name?.split(' ')[0] || 'User'}!
-          </h1>
-          <p className="text-gray-600">
-            Track your health journey and view your AI-powered symptom analysis history.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Quick Actions */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Camera className="w-5 h-5" />
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  className="w-full justify-start" 
-                  onClick={() => navigate('/scan')}
-                >
-                  <Brain className="w-4 h-4 mr-2" />
-                  AI Symptom Scan
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => navigate('/journal')}
-                >
-                  <History className="w-4 h-4 mr-2" />
-                  Health Journal
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Chat with Medxo
-                </Button>
-              </CardContent>
-            </Card>
+      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Welcome Section */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
+              Welcome back, {user?.user_metadata?.full_name || 'there'}!
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Your personal health dashboard. Track symptoms, get AI insights, and manage your wellness journey.
+            </p>
           </div>
 
-          {/* Scan History */}
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <History className="w-5 h-5" />
-                  Recent AI Scans ({scans.length})
-                </CardTitle>
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <Card className="medical-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Scans</CardTitle>
+                <Camera className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                {loading ? (
-                  <div className="text-center py-8">
-                    <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto"></div>
-                  </div>
-                ) : scans.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Brain className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                    <p>No scans yet. Upload your first symptom photo for AI analysis!</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {scans.map((scan) => (
-                      <div key={scan.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <img 
-                              src={scan.image_url} 
-                              alt="Scan" 
-                              className="w-16 h-16 rounded-lg object-cover"
-                            />
-                            <div>
-                              <h3 className="font-medium text-gray-900">
-                                {scan.wound_classification || scan.symptom_description || 'Symptom Analysis'}
-                              </h3>
-                              {scan.confidence_score && (
-                                <p className="text-sm text-blue-600">
-                                  AI Confidence: {Math.round(scan.confidence_score * 100)}%
-                                </p>
-                              )}
-                              <div className="flex items-center gap-2 mt-1">
-                                <Calendar className="w-4 h-4 text-gray-400" />
-                                <span className="text-sm text-gray-500">
-                                  {formatDate(scan.created_at)}
-                                </span>
-                                {scan.urgency_level && (
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(scan.urgency_level)}`}>
-                                    {scan.urgency_level?.toUpperCase()}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleViewDetails(scan)}
-                            >
-                              <Eye className="w-4 h-4 mr-1" />
-                              View Details
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleDownloadPDF(scan)}
-                            >
-                              <Download className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <div className="text-2xl font-bold">{loading ? '...' : stats.totalScans}</div>
+                <p className="text-xs text-muted-foreground">AI symptom analyses</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="medical-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Journal Entries</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{loading ? '...' : stats.journalEntries}</div>
+                <p className="text-xs text-muted-foreground">Health records tracked</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="medical-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Activity Status</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm font-medium text-green-600">Active</div>
+                <p className="text-xs text-muted-foreground">{stats.recentActivity}</p>
               </CardContent>
             </Card>
           </div>
-        </div>
 
-        {/* Scan Details Modal */}
-        {selectedScan && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">AI Scan Analysis</h2>
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => setSelectedScan(null)}
-                  >
-                    ×
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <img 
-                      src={selectedScan.image_url} 
-                      alt="Scan" 
-                      className="w-full rounded-lg"
-                    />
-                    {selectedScan.wound_classification && (
-                      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                        <h4 className="font-semibold text-blue-900">AI Classification</h4>
-                        <p className="text-blue-700">{selectedScan.wound_classification}</p>
-                        {selectedScan.confidence_score && (
-                          <p className="text-sm text-blue-600">
-                            Confidence: {Math.round(selectedScan.confidence_score * 100)}%
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">Home Remedies</h3>
-                      {selectedScan.home_remedies ? (
-                        <ul className="space-y-1">
-                          {selectedScan.home_remedies.map((remedy: string, index: number) => (
-                            <li key={index} className="text-gray-700 text-sm">• {remedy}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-gray-700">{selectedScan.remedy_suggestion || 'No specific remedies suggested for this scan.'}</p>
-                      )}
-                    </div>
-
-                    {selectedScan.medications && (
-                      <div>
-                        <h3 className="font-semibold text-lg mb-2">Suggested Medications</h3>
-                        <div className="space-y-3">
-                          {selectedScan.medications.map((med: any, index: number) => (
-                            <div key={index} className="border rounded-lg p-3 bg-gray-50">
-                              <h4 className="font-medium text-primary">{med.name}</h4>
-                              <p className="text-sm"><strong>Dosage:</strong> {med.dosage}</p>
-                              <p className="text-sm"><strong>Frequency:</strong> {med.frequency}</p>
-                              <p className="text-sm text-gray-600">{med.precautions}</p>
-                            </div>
-                          ))}
+          {/* Quick Actions */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-semibold text-foreground mb-6">Quick Actions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {quickActions.map((action, index) => (
+                <Card 
+                  key={action.title} 
+                  className="medical-card hover:shadow-lg transition-shadow cursor-pointer group"
+                  onClick={action.onClick ? action.onClick : undefined}
+                >
+                  {action.href ? (
+                    <a href={action.href} className="block">
+                      <CardContent className="p-6 text-center">
+                        <div className={`w-12 h-12 ${action.color} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}>
+                          <action.icon className="w-6 h-6 text-white" />
                         </div>
+                        <h3 className="font-semibold text-foreground mb-2">{action.title}</h3>
+                        <p className="text-sm text-muted-foreground">{action.description}</p>
+                      </CardContent>
+                    </a>
+                  ) : (
+                    <CardContent className="p-6 text-center">
+                      <div className={`w-12 h-12 ${action.color} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}>
+                        <action.icon className="w-6 h-6 text-white" />
                       </div>
-                    )}
+                      <h3 className="font-semibold text-foreground mb-2">{action.title}</h3>
+                      <p className="text-sm text-muted-foreground">{action.description}</p>
+                    </CardContent>
+                  )}
+                </Card>
+              ))}
+            </div>
+          </div>
 
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">AI Analysis Summary</h3>
-                      <p className="text-gray-700">
-                        {selectedScan.ai_analysis?.summary || selectedScan.symptom_description || 'Analysis data not available.'}
-                      </p>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={() => handleDownloadPDF(selectedScan)}
-                        className="flex-1"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download PDF Report
-                      </Button>
-                    </div>
+          {/* Health Insights */}
+          <Card className="medical-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="w-5 h-5" />
+                Health Insights & Tips
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h4 className="font-medium text-foreground">Today's Recommendations</h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      Stay hydrated - aim for 8 glasses of water
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      Take regular breaks if working at a computer
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      Consider a 10-minute walk for mental clarity
+                    </li>
+                  </ul>
+                </div>
+                <div className="space-y-4">
+                  <h4 className="font-medium text-foreground">Quick Health Check</h4>
+                  <div className="space-y-3">
+                    <Button variant="outline" className="w-full justify-start">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Schedule wellness reminder
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start">
+                      <Clock className="w-4 h-4 mr-2" />
+                      Set medication alert
+                    </Button>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-      </main>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

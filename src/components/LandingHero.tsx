@@ -2,8 +2,29 @@
 import React from 'react';
 import { Camera, MessageCircle, History, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const LandingHero = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    if (user) {
+      navigate('/scan');
+    } else {
+      navigate('/auth');
+    }
+  };
+
+  const handleLearnMore = () => {
+    // Scroll to features section or navigate to about page
+    const featuresSection = document.querySelector('#features');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const features = [
     {
       icon: Camera,
@@ -42,10 +63,19 @@ const LandingHero = () => {
               remedy suggestions, urgency ratings, and professional guidance.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 py-3 animate-scale-in">
-                Get Started Free
+              <Button 
+                size="lg" 
+                className="bg-primary hover:bg-primary/90 text-lg px-8 py-3 animate-scale-in"
+                onClick={handleGetStarted}
+              >
+                {user ? 'Start Scanning' : 'Get Started Free'}
               </Button>
-              <Button variant="outline" size="lg" className="text-lg px-8 py-3 animate-scale-in">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="text-lg px-8 py-3 animate-scale-in"
+                onClick={handleLearnMore}
+              >
                 Learn More
               </Button>
             </div>
@@ -73,7 +103,7 @@ const LandingHero = () => {
       </div>
 
       {/* Features Section */}
-      <div className="py-16 bg-white">
+      <div id="features" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
@@ -115,8 +145,13 @@ const LandingHero = () => {
           <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
             Join thousands of users who trust EchoRemedy for quick, reliable health guidance
           </p>
-          <Button size="lg" variant="secondary" className="text-lg px-8 py-3 bg-white text-primary hover:bg-white/90">
-            Start Your Health Journey
+          <Button 
+            size="lg" 
+            variant="secondary" 
+            className="text-lg px-8 py-3 bg-white text-primary hover:bg-white/90"
+            onClick={handleGetStarted}
+          >
+            {user ? 'Go to Dashboard' : 'Start Your Health Journey'}
           </Button>
         </div>
       </div>

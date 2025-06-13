@@ -3,198 +3,294 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { BookOpen, Plus, Calendar, TrendingUp } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Slider } from '@/components/ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar, Plus, Trash2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface JournalEntry {
   id: string;
-  date: string;
   symptoms: string;
   severity: number;
-  notes: string;
+  notes: string | null;
   mood: string;
+  created_at: string;
 }
 
 const Journal = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newEntry, setNewEntry] = useState({
-    symptoms: '',
-    severity: 5,
-    notes: '',
-    mood: 'neutral'
-  });
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  
+  // Form state
+  const [symptoms, setSymptoms] = useState('');
+  const [severity, setSeverity] = useState([5]);
+  const [notes, setNotes] = useState('');
+  const [mood, setMood] = useState('');
 
-  const handleAddEntry = () => {
-    const entry: JournalEntry = {
-      id: Date.now().toString(),
-      date: new Date().toISOString().split('T')[0],
-      ...newEntry
-    };
-    setEntries([entry, ...entries]);
-    setNewEntry({ symptoms: '', severity: 5, notes: '', mood: 'neutral' });
-    setShowAddForm(false);
+  const fetchEntries = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('journal_entries')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setEntries(data || []);
+    } catch (error) {
+      console.error('Error fetching entries:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load journal entries",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEntries();
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !symptoms.trim() || !mood) return;
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('journal_entries')
+        .insert({
+          user_id: user.id,
+          symptoms: symptoms.trim(),
+          severity: severity[0],
+          notes: notes.trim() || null,
+          mood: mood
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Journal entry saved successfully"
+      });
+
+      // Reset form
+      setSymptoms('');
+      setSeverity([5]);
+      setNotes('');
+      setMood('');
+
+      // Refresh entries
+      fetchEntries();
+    } catch (error) {
+      console.error('Error saving entry:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save journal entry",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const deleteEntry = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('journal_entries')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Journal entry deleted"
+      });
+
+      fetchEntries();
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete entry",
+        variant: "destructive"
+      });
+    }
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
-  const getSeverityColor = (severity: number) => {
-    if (severity <= 3) return 'text-green-600 bg-green-50';
-    if (severity <= 6) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation userType="user" userName={user?.user_metadata?.full_name || user?.email} />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+      <Navigation userType={user ? "user" : "guest"} userName={user?.user_metadata?.full_name || user?.email} />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-            <BookOpen className="w-8 h-8" />
-            Health Journal
-          </h1>
-          <p className="text-gray-600">
-            Track your symptoms, progress, and reflect on your health journey.
-          </p>
-        </div>
+      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+              Health Journal
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Track your symptoms and mood to better understand your health patterns
+            </p>
+          </div>
 
-        <div className="mb-6">
-          <Button 
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add New Entry
-          </Button>
-        </div>
-
-        {showAddForm && (
-          <Card className="mb-6">
+          {/* New Entry Form */}
+          <Card className="mb-8 medical-card">
             <CardHeader>
-              <CardTitle>New Journal Entry</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                New Journal Entry
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Symptoms
-                </label>
-                <Input
-                  value={newEntry.symptoms}
-                  onChange={(e) => setNewEntry({...newEntry, symptoms: e.target.value})}
-                  placeholder="Describe your symptoms..."
-                />
-              </div>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Symptoms *
+                  </label>
+                  <Textarea
+                    placeholder="Describe your symptoms..."
+                    value={symptoms}
+                    onChange={(e) => setSymptoms(e.target.value)}
+                    required
+                    className="min-h-[100px]"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Severity (1-10)
-                </label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={newEntry.severity}
-                  onChange={(e) => setNewEntry({...newEntry, severity: parseInt(e.target.value)})}
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Severity Level: {severity[0]}/10
+                  </label>
+                  <Slider
+                    value={severity}
+                    onValueChange={setSeverity}
+                    min={1}
+                    max={10}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>Mild</span>
+                    <span>Moderate</span>
+                    <span>Severe</span>
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mood
-                </label>
-                <select 
-                  value={newEntry.mood}
-                  onChange={(e) => setNewEntry({...newEntry, mood: e.target.value})}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Mood *
+                  </label>
+                  <Select value={mood} onValueChange={setMood} required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your mood" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="excellent">😊 Excellent</SelectItem>
+                      <SelectItem value="good">🙂 Good</SelectItem>
+                      <SelectItem value="okay">😐 Okay</SelectItem>
+                      <SelectItem value="poor">😔 Poor</SelectItem>
+                      <SelectItem value="terrible">😩 Terrible</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Additional Notes
+                  </label>
+                  <Textarea
+                    placeholder="Any additional observations or notes..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="min-h-[80px]"
+                  />
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={submitting || !symptoms.trim() || !mood}
                 >
-                  <option value="great">Great</option>
-                  <option value="good">Good</option>
-                  <option value="neutral">Neutral</option>
-                  <option value="poor">Poor</option>
-                  <option value="terrible">Terrible</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Notes
-                </label>
-                <Textarea
-                  value={newEntry.notes}
-                  onChange={(e) => setNewEntry({...newEntry, notes: e.target.value})}
-                  placeholder="Additional notes about your health today..."
-                  rows={4}
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button onClick={handleAddEntry}>Save Entry</Button>
-                <Button variant="outline" onClick={() => setShowAddForm(false)}>
-                  Cancel
+                  {submitting ? 'Saving...' : 'Save Entry'}
                 </Button>
-              </div>
+              </form>
             </CardContent>
           </Card>
-        )}
 
-        <div className="space-y-4">
-          {entries.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No entries yet</h3>
-                <p className="text-gray-500">Start tracking your health journey by adding your first entry.</p>
-              </CardContent>
-            </Card>
-          ) : (
-            entries.map((entry) => (
-              <Card key={entry.id}>
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-5 h-5 text-gray-400" />
-                      <span className="font-medium">{formatDate(entry.date)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(entry.severity)}`}>
-                        Severity: {entry.severity}/10
-                      </span>
-                      <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-medium">
-                        Mood: {entry.mood}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-1">Symptoms</h4>
-                      <p className="text-gray-700">{entry.symptoms}</p>
-                    </div>
-
-                    {entry.notes && (
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-1">Notes</h4>
-                        <p className="text-gray-700">{entry.notes}</p>
-                      </div>
-                    )}
-                  </div>
+          {/* Entries List */}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold text-foreground mb-4">Previous Entries</h2>
+            
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto"></div>
+                <p className="text-muted-foreground mt-2">Loading entries...</p>
+              </div>
+            ) : entries.length === 0 ? (
+              <Card className="medical-card">
+                <CardContent className="text-center py-8">
+                  <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No journal entries yet. Create your first entry above!</p>
                 </CardContent>
               </Card>
-            ))
-          )}
+            ) : (
+              entries.map((entry) => (
+                <Card key={entry.id} className="medical-card">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="text-lg">{formatDate(entry.created_at)}</CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        Severity: {entry.severity}/10 • Mood: {entry.mood}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => deleteEntry(entry.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="font-medium text-foreground mb-1">Symptoms:</h4>
+                        <p className="text-muted-foreground">{entry.symptoms}</p>
+                      </div>
+                      {entry.notes && (
+                        <div>
+                          <h4 className="font-medium text-foreground mb-1">Notes:</h4>
+                          <p className="text-muted-foreground">{entry.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
