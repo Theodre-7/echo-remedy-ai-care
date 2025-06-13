@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, MessageCircle, FileText, TrendingUp, Calendar, Clock, Target } from 'lucide-react';
+import { Camera, MessageCircle, FileText, TrendingUp, Calendar, Clock, Target, History, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
@@ -60,7 +60,7 @@ const Dashboard = () => {
   const quickActions = [
     {
       title: 'AI Symptom Scan',
-      description: 'Upload photos for instant analysis',
+      description: 'Advanced CNN analysis for wounds',
       icon: Camera,
       href: '/scan',
       color: 'bg-blue-500'
@@ -78,6 +78,13 @@ const Dashboard = () => {
       icon: FileText,
       href: '/journal',
       color: 'bg-purple-500'
+    },
+    {
+      title: 'Scan History',
+      description: 'View past analyses & reports',
+      icon: History,
+      href: '/scan-history',
+      color: 'bg-indigo-500'
     },
     {
       title: 'Health Tips',
@@ -100,7 +107,7 @@ const Dashboard = () => {
               Welcome back, {user?.user_metadata?.full_name || 'there'}!
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Your personal health dashboard. Track symptoms, get AI insights, and manage your wellness journey.
+              Your personal health dashboard with advanced AI-powered symptom analysis and comprehensive medical insights.
             </p>
           </div>
 
@@ -108,12 +115,12 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <Card className="medical-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Scans</CardTitle>
+                <CardTitle className="text-sm font-medium">AI Scans Completed</CardTitle>
                 <Camera className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{loading ? '...' : stats.totalScans}</div>
-                <p className="text-xs text-muted-foreground">AI symptom analyses</p>
+                <p className="text-xs text-muted-foreground">CNN-powered analyses</p>
               </CardContent>
             </Card>
             
@@ -143,7 +150,7 @@ const Dashboard = () => {
           {/* Quick Actions */}
           <div className="mb-12">
             <h2 className="text-2xl font-semibold text-foreground mb-6">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               {quickActions.map((action, index) => (
                 <Card 
                   key={action.title} 
@@ -174,35 +181,39 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Health Insights */}
+          {/* Enhanced Health Insights */}
           <Card className="medical-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="w-5 h-5" />
-                Health Insights & Tips
+                AI-Powered Health Insights & Recommendations
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <h4 className="font-medium text-foreground">Today's Recommendations</h4>
+                  <h4 className="font-medium text-foreground">Today's AI Recommendations</h4>
                   <ul className="space-y-2 text-sm text-muted-foreground">
                     <li className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      Stay hydrated - aim for 8 glasses of water
+                      Monitor skin changes with regular AI scans
                     </li>
                     <li className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      Take regular breaks if working at a computer
+                      Stay hydrated - aim for 8 glasses of water
                     </li>
                     <li className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      Document symptoms in your health journal
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                       Consider a 10-minute walk for mental clarity
                     </li>
                   </ul>
                 </div>
                 <div className="space-y-4">
-                  <h4 className="font-medium text-foreground">Quick Health Check</h4>
+                  <h4 className="font-medium text-foreground">Quick Health Tools</h4>
                   <div className="space-y-3">
                     <Button variant="outline" className="w-full justify-start">
                       <Calendar className="w-4 h-4 mr-2" />
@@ -211,6 +222,10 @@ const Dashboard = () => {
                     <Button variant="outline" className="w-full justify-start">
                       <Clock className="w-4 h-4 mr-2" />
                       Set medication alert
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start">
+                      <Download className="w-4 h-4 mr-2" />
+                      Export health data
                     </Button>
                   </div>
                 </div>
