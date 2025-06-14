@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, Camera, FileImage, AlertTriangle, CheckCircle, Clock, Brain, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { analyzeSymptomImage, uploadImageToStorage, saveScanToDatabase, type MLAnalysisResult } from '@/services/mlAnalysisService';
+import { useHuggingfaceImageClassifier } from "@/hooks/useHuggingfaceImageClassifier";
 
 const Scan = () => {
   const { user } = useAuth();
@@ -21,6 +22,11 @@ const Scan = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<MLAnalysisResult | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const huggingfaceResult = useRef<{ label: string; score: number }[] | null>(null);
+  const [hfState, setHfState] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [hfDisplayResult, setHfDisplayResult] = useState<string | null>(null);
+  const { classify } = useHuggingfaceImageClassifier();
 
   // AI-powered image validation to detect medical symptoms/wounds
   const validateMedicalImage = async (file: File): Promise<boolean> => {
@@ -229,6 +235,28 @@ const Scan = () => {
     }
   };
 
+  // Huggingface ML classify action
+  const handleHuggingfaceClassify = async () => {
+    if (!selectedFile) return;
+    setHfState("loading");
+    setHfDisplayResult(null);
+    try {
+      const preds = await classify(selectedFile);
+      huggingfaceResult.current = preds;
+      setHfDisplayResult(
+        preds
+          .slice(0, 3)
+          .map(p => `${p.label} (${Math.round(p.score * 100)}%)`)
+          .join(", ")
+      );
+      setHfState("done");
+    } catch (e) {
+      console.error("Huggingface classify error:", e);
+      setHfDisplayResult("Error running model. Try again or reload.");
+      setHfState("error");
+    }
+  };
+
   if (!user) {
     navigate('/auth');
     return null;
@@ -321,11 +349,37 @@ const Scan = () => {
                         onClick={() => {
                           setSelectedFile(null);
                           setPreviewUrl(null);
+                          setHfState("idle");
+                          setHfDisplayResult(null);
                         }}
                       >
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
+
+                    {/* --- Huggingface ML Button and Result --- */}
+                    <div className="flex flex-col items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={hfState === "loading"}
+                        onClick={handleHuggingfaceClassify}
+                        className="flex items-center gap-2"
+                      >
+                        <Brain className="w-4 h-4" />
+                        {hfState === "loading" ? "Running Huggingface ML..." : "Try Browser ML (Huggingface)"}
+                      </Button>
+                      {hfState === "loading" && (
+                        <div className="text-gray-500 text-sm">Loading model & analyzing image (may take up to 30 seconds)...</div>
+                      )}
+                      {hfDisplayResult && (
+                        <div className="bg-blue-50 rounded p-2 text-blue-800 text-sm w-full max-w-md text-center border border-blue-200">
+                          <strong>Model prediction(s): </strong> {hfDisplayResult}
+                        </div>
+                      )}
+                    </div>
+                    {/* --- END Huggingface ML --- */}
+
                     <div className="text-center">
                       <Button
                         onClick={analyzeImage}
