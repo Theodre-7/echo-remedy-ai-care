@@ -4,6 +4,69 @@ import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, Shield, Utensils, Moon, Dumbbell, Brain } from 'lucide-react';
 
+const tipCategories = [
+  {
+    icon: Shield,
+    title: "Immunity Boosters",
+    tips: [
+      "Drink warm water with lemon and honey first thing in the morning",
+      "Include vitamin C rich foods like oranges, guavas, and bell peppers",
+      "Practice deep breathing exercises for 10 minutes daily",
+      "Get adequate sunlight for natural vitamin D"
+    ]
+  },
+  {
+    icon: Utensils,
+    title: "Nutrition Tips",
+    tips: [
+      "Eat a rainbow of fruits and vegetables daily",
+      "Include probiotics like yogurt and fermented foods",
+      "Stay hydrated with 8-10 glasses of water daily",
+      "Limit processed foods and excess sugar intake"
+    ]
+  },
+  {
+    icon: Moon,
+    title: "Sleep & Rest",
+    tips: [
+      "Maintain a consistent sleep schedule of 7-9 hours",
+      "Create a relaxing bedtime routine",
+      "Keep your bedroom cool, dark, and quiet",
+      "Avoid screens 1 hour before bedtime"
+    ]
+  },
+  {
+    icon: Dumbbell,
+    title: "Physical Activity",
+    tips: [
+      "Aim for at least 30 minutes of moderate exercise daily",
+      "Take the stairs instead of elevators when possible",
+      "Practice yoga or stretching for flexibility",
+      "Go for a 10-minute walk after meals"
+    ]
+  },
+  {
+    icon: Brain,
+    title: "Mental Wellness",
+    tips: [
+      "Practice mindfulness meditation for 5-10 minutes daily",
+      "Connect with friends and family regularly",
+      "Engage in hobbies that bring you joy",
+      "Practice gratitude by writing 3 things you're thankful for daily"
+    ]
+  },
+  {
+    icon: Heart,
+    title: "Seasonal Prevention",
+    tips: [
+      "Wash hands frequently, especially during flu season",
+      "Keep your living space well-ventilated",
+      "Boost immunity with seasonal fruits and vegetables",
+      "Stay updated with preventive healthcare checkups"
+    ]
+  }
+];
+
 const getDailyTip = () => {
   // Flatten all tips with category references
   const allTips: { category: string; tip: string }[] = [];
@@ -33,69 +96,6 @@ const getDailyTip = () => {
 
 const HealthTips = () => {
   const { user } = useAuth();
-
-  const tipCategories = [
-    {
-      icon: Shield,
-      title: "Immunity Boosters",
-      tips: [
-        "Drink warm water with lemon and honey first thing in the morning",
-        "Include vitamin C rich foods like oranges, guavas, and bell peppers",
-        "Practice deep breathing exercises for 10 minutes daily",
-        "Get adequate sunlight for natural vitamin D"
-      ]
-    },
-    {
-      icon: Utensils,
-      title: "Nutrition Tips",
-      tips: [
-        "Eat a rainbow of fruits and vegetables daily",
-        "Include probiotics like yogurt and fermented foods",
-        "Stay hydrated with 8-10 glasses of water daily",
-        "Limit processed foods and excess sugar intake"
-      ]
-    },
-    {
-      icon: Moon,
-      title: "Sleep & Rest",
-      tips: [
-        "Maintain a consistent sleep schedule of 7-9 hours",
-        "Create a relaxing bedtime routine",
-        "Keep your bedroom cool, dark, and quiet",
-        "Avoid screens 1 hour before bedtime"
-      ]
-    },
-    {
-      icon: Dumbbell,
-      title: "Physical Activity",
-      tips: [
-        "Aim for at least 30 minutes of moderate exercise daily",
-        "Take the stairs instead of elevators when possible",
-        "Practice yoga or stretching for flexibility",
-        "Go for a 10-minute walk after meals"
-      ]
-    },
-    {
-      icon: Brain,
-      title: "Mental Wellness",
-      tips: [
-        "Practice mindfulness meditation for 5-10 minutes daily",
-        "Connect with friends and family regularly",
-        "Engage in hobbies that bring you joy",
-        "Practice gratitude by writing 3 things you're thankful for daily"
-      ]
-    },
-    {
-      icon: Heart,
-      title: "Seasonal Prevention",
-      tips: [
-        "Wash hands frequently, especially during flu season",
-        "Keep your living space well-ventilated",
-        "Boost immunity with seasonal fruits and vegetables",
-        "Stay updated with preventive healthcare checkups"
-      ]
-    }
-  ];
 
   const dailyTip = getDailyTip();
 
