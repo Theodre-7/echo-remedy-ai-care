@@ -175,10 +175,10 @@ const ScanHistory = () => {
                     <Button
                       size="sm"
                       onClick={() => handleDownloadReport(scan)}
-                      className="flex-1"
+                      className="flex-1 min-w-0 px-2"
                     >
                       <Download className="w-4 h-4 mr-1" />
-                      Download Report
+                      Download
                     </Button>
                   </div>
                 </CardContent>
