@@ -209,9 +209,9 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-96 h-[600px] flex flex-col">
-      <Card className="flex-1 flex flex-col shadow-2xl">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-primary text-white rounded-t-lg">
+    <div className="fixed bottom-6 right-6 z-50 w-96 max-h-[80vh] flex flex-col">
+      <Card className="flex flex-col shadow-2xl h-full max-h-[600px]">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-primary text-white rounded-t-lg flex-shrink-0">
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <Bot className="h-5 w-5" />
             Medxo Assistant
@@ -226,9 +226,9 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
           </Button>
         </CardHeader>
         
-        <CardContent className="flex-1 flex flex-col p-0 min-h-0">
-          {/* Messages Container - Fixed height with scroll */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+        <CardContent className="flex flex-col p-0 flex-1 min-h-0">
+          {/* Messages Container - Scrollable area */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 max-h-[400px]">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -297,9 +297,9 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
             <div ref={messagesEndRef} />
           </div>
           
-          {/* Input Container - Fixed at bottom */}
-          <div className="border-t p-4 flex-shrink-0">
-            <div className="flex gap-2">
+          {/* Input Container - Always visible at bottom */}
+          <div className="border-t bg-white p-4 flex-shrink-0">
+            <div className="flex gap-2 mb-2">
               <Input
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
@@ -317,14 +317,12 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
                 <Send className="h-4 w-4" />
               </Button>
             </div>
-            <div className="mt-2">
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="text-xs">
-                  For emergencies, call 911. This is not a substitute for professional medical advice.
-                </AlertDescription>
-              </Alert>
-            </div>
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                For emergencies, call 911. This is not a substitute for professional medical advice.
+              </AlertDescription>
+            </Alert>
           </div>
         </CardContent>
       </Card>
