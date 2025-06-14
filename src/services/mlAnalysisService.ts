@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface MLAnalysisResult {
@@ -137,41 +136,60 @@ const simulateGoogleImageSearch = async (classification: string): Promise<string
   return mockSimilarImages;
 };
 
-// Enhanced CNN-based classification simulation
+// Simple hash function for deterministic pseudo-random selection based on file
+const getFileDeterministicHash = async (file: File): Promise<number> => {
+  // Use first 64 bytes of the file and the file name and size
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const arr = new Uint8Array(e.target?.result as ArrayBuffer);
+      let hash = 5381;
+      // Add filename chars
+      for (let i = 0; i < file.name.length; i++) {
+        hash = ((hash << 5) + hash) + file.name.charCodeAt(i);
+      }
+      // Add file size
+      hash = ((hash << 5) + hash) + file.size;
+      // Add first bytes
+      for (let i = 0; i < arr.length; i++) {
+        hash = ((hash << 5) + hash) + arr[i];
+      }
+      resolve(hash >>> 0); // always positive number
+    };
+    // Only read first 64 bytes for performance
+    const blob = file.slice(0, 64);
+    reader.readAsArrayBuffer(blob);
+  });
+};
+
+// Enhanced CNN-based classification simulation (now deterministic)
 const simulateAdvancedCNNAnalysis = async (file: File): Promise<{classification: string, confidence: number}> => {
-  // Simulate advanced image preprocessing and CNN analysis
-  await new Promise(resolve => setTimeout(resolve, 3000)); // Longer processing for realism
-  
-  // Simulate CNN model prediction with weighted probabilities
-  const classificationWeights = {
-    'Contact Dermatitis': 0.25,
-    'Acute Laceration': 0.20,
-    'Eczema/Atopic Dermatitis': 0.15,
-    'Insect Bite/Sting': 0.12,
-    'Burn (1st Degree)': 0.10,
-    'Acne Vulgaris': 0.08,
-    'Fungal Infection (Tinea)': 0.05,
-    'Cellulitis': 0.03,
-    'Burn (2nd Degree)': 0.02
-  };
-  
-  const random = Math.random();
-  let cumulative = 0;
-  let selectedClassification = 'Contact Dermatitis';
-  
-  for (const [classification, weight] of Object.entries(classificationWeights)) {
-    cumulative += weight;
-    if (random <= cumulative) {
-      selectedClassification = classification;
-      break;
-    }
-  }
-  
-  // Higher confidence for more common conditions
-  const baseConfidence = classificationWeights[selectedClassification as keyof typeof classificationWeights] || 0.1;
-  const confidence = Math.min(0.95, baseConfidence + Math.random() * 0.3 + 0.4);
-  
-  return { classification: selectedClassification, confidence };
+  // Simulate processing delay
+  await new Promise(resolve => setTimeout(resolve, 3000)); // Realistic delay
+
+  // Deterministic hash for the given image
+  const hash = await getFileDeterministicHash(file);
+
+  // Indexed class selection based on hash
+  const classificationKeys = [
+    'Contact Dermatitis',
+    'Acute Laceration',
+    'Eczema/Atopic Dermatitis',
+    'Insect Bite/Sting',
+    'Burn (1st Degree)',
+    'Acne Vulgaris',
+    'Fungal Infection (Tinea)',
+    'Cellulitis',
+    'Burn (2nd Degree)'
+  ];
+  const idx = hash % classificationKeys.length;
+  const selectedClassification = classificationKeys[idx];
+
+  // Deterministic "confidence" between 0.7-0.98
+  const confSeed = ((hash >> 8) % 2900) / 10000; // 0.00 - 0.29
+  const confidence = 0.7 + confSeed + 0.01 * (idx % 3); // Slight variance
+
+  return { classification: selectedClassification, confidence: Math.min(confidence, 0.98) };
 };
 
 export const analyzeSymptomImage = async (file: File): Promise<MLAnalysisResult> => {
