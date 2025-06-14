@@ -11,7 +11,8 @@ export const useHuggingfaceImageClassifier = () => {
     if (!classifierRef.current) {
       classifierRef.current = await pipeline(
         "image-classification",
-        "onnx-community/mobilenetv4_conv_small.e2400_r224_in1k",
+        // Use the specialized dermatology model
+        "ashraq/dermatology-image-classification",
         { device: "webgpu" }
       );
     }
@@ -31,7 +32,7 @@ export const useHuggingfaceImageClassifier = () => {
     // Free up the object URL
     URL.revokeObjectURL(url);
 
-    // results: [{ label: "skin", score: 0.9 }, ...]
+    // results: [{ label: "...", score: ... }, ...]
     return results;
   };
 
