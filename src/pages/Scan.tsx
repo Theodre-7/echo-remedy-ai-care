@@ -11,6 +11,7 @@ import { Upload, Camera, FileImage, AlertTriangle, CheckCircle, Clock, Brain, X 
 import { useToast } from '@/hooks/use-toast';
 import { analyzeSymptomImage, uploadImageToStorage, saveScanToDatabase, type MLAnalysisResult } from '@/services/mlAnalysisService';
 import { useHuggingfaceImageClassifier } from "@/hooks/useHuggingfaceImageClassifier";
+import { supabase } from '@/integrations/supabase/client';
 
 const Scan = () => {
   const { user } = useAuth();
@@ -26,6 +27,8 @@ const Scan = () => {
   const huggingfaceResult = useRef<{ label: string; score: number }[] | null>(null);
   const [hfState, setHfState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [hfDisplayResult, setHfDisplayResult] = useState<string | null>(null);
+  const [symptomApiResult, setSymptomApiResult] = useState<any | null>(null);
+  const [symptomApiState, setSymptomApiState] = useState<"idle"|"loading"|"done"|"error">("idle");
   const { classify } = useHuggingfaceImageClassifier();
 
   // AI-powered image validation to detect medical symptoms/wounds
@@ -235,14 +238,19 @@ const Scan = () => {
     }
   };
 
-  // Huggingface ML classify action
+  // Huggingface ML classify action (now with API Ninjas flow)
   const handleHuggingfaceClassify = async () => {
     if (!selectedFile) return;
     setHfState("loading");
     setHfDisplayResult(null);
+    setSymptomApiResult(null);
+    setSymptomApiState("idle");
+
     try {
       const preds = await classify(selectedFile);
       huggingfaceResult.current = preds;
+
+      const topLabels = preds.slice(0, 2).map(p => p.label); // top 2 as symptoms
       setHfDisplayResult(
         preds
           .slice(0, 3)
@@ -250,10 +258,28 @@ const Scan = () => {
           .join(", ")
       );
       setHfState("done");
+
+      // Call Supabase edge function for symptom classification
+      setSymptomApiState("loading");
+      const { data, error } = await supabase.functions.invoke("symptom-checker", {
+        body: { symptoms: topLabels },
+      });
+
+      if (error) {
+        setSymptomApiResult(
+          { error: "Failed to classify symptoms with API Ninjas." }
+        );
+        setSymptomApiState("error");
+      } else {
+        setSymptomApiResult(data?.result);
+        setSymptomApiState("done");
+      }
     } catch (e) {
       console.error("Huggingface classify error:", e);
       setHfDisplayResult("Error running model. Try again or reload.");
       setHfState("error");
+      setSymptomApiState("error");
+      setSymptomApiResult({ error: "Huggingface ML error." });
     }
   };
 
@@ -375,6 +401,32 @@ const Scan = () => {
                       {hfDisplayResult && (
                         <div className="bg-blue-50 rounded p-2 text-blue-800 text-sm w-full max-w-md text-center border border-blue-200">
                           <strong>Model prediction(s): </strong> {hfDisplayResult}
+                          {/* Symptom Checker API result */}
+                          {symptomApiState === 'loading' && (
+                            <div className="text-xs mt-2 text-gray-400">Checking possible conditions/allergies via API Ninjas...</div>
+                          )}
+                          {symptomApiState === 'done' && symptomApiResult && (
+                            <div className="mt-2 p-2 bg-white border border-gray-200 rounded text-left text-gray-700">
+                              <strong className="block mb-2 text-blue-700">API Ninjas Symptom Checker:</strong>
+                              {(Array.isArray(symptomApiResult) && symptomApiResult.length > 0) ? (
+                                <ul className="list-disc ml-4">
+                                  {symptomApiResult.map((item, idx) => (
+                                    <li key={idx} className="mb-1">
+                                      <span className="font-medium text-indigo-700">{item.name}:</span> {item.cause}
+                                      {item.allergies && (
+                                        <span className="block text-xs text-gray-500">Allergies: {Array.isArray(item.allergies) ? item.allergies.join(", ") : item.allergies}</span>
+                                      )}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <span>No matching conditions found.</span>
+                              )}
+                            </div>
+                          )}
+                          {symptomApiState === 'error' && (
+                            <div className="mt-2 text-xs text-red-500">Error retrieving suggestion from API Ninjas.</div>
+                          )}
                         </div>
                       )}
                     </div>
