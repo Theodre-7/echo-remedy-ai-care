@@ -1,19 +1,27 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Message {
   id: string;
   content: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  type?: 'info' | 'warning' | 'symptom-track';
 }
 
 interface MedxoChatbotProps {
   autoShow?: boolean;
+}
+
+interface SymptomData {
+  symptom: string;
+  severity: string;
+  duration: string;
+  timestamp: Date;
 }
 
 const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
@@ -21,65 +29,109 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm Medxo, your AI health assistant. How can I help you today? Please note that I'm here for informational purposes only and not a replacement for professional medical advice.",
+      content: "Hello! I'm Medxo, your AI health assistant. I'm here to help you track symptoms, suggest over-the-counter remedies for wounds and common ailments, and provide health guidance. How can I assist you today?",
       sender: 'bot',
       timestamp: new Date()
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [trackedSymptoms, setTrackedSymptoms] = useState<SymptomData[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const analyzeUserIntent = (message: string): 'symptom-track' | 'wound-care' | 'allergy' | 'medication' | 'general' | 'emergency' => {
+    const lowercaseMessage = message.toLowerCase();
+    
+    if (lowercaseMessage.includes('track') || lowercaseMessage.includes('symptom') || lowercaseMessage.includes('feeling')) {
+      return 'symptom-track';
+    }
+    if (lowercaseMessage.includes('cut') || lowercaseMessage.includes('wound') || lowercaseMessage.includes('burn') || lowercaseMessage.includes('scrape')) {
+      return 'wound-care';
+    }
+    if (lowercaseMessage.includes('allergy') || lowercaseMessage.includes('allergic') || lowercaseMessage.includes('reaction') || lowercaseMessage.includes('itchy')) {
+      return 'allergy';
+    }
+    if (lowercaseMessage.includes('medicine') || lowercaseMessage.includes('medication') || lowercaseMessage.includes('take') || lowercaseMessage.includes('dose')) {
+      return 'medication';
+    }
+    if (lowercaseMessage.includes('emergency') || lowercaseMessage.includes('urgent') || lowercaseMessage.includes('911') || lowercaseMessage.includes('severe pain')) {
+      return 'emergency';
+    }
+    
+    return 'general';
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Listen for toggle events from dashboard
-  useEffect(() => {
-    const handleToggle = () => {
-      setIsOpen(prev => !prev);
-    };
-
-    window.addEventListener('medxo-chat-toggle', handleToggle);
-    return () => window.removeEventListener('medxo-chat-toggle', handleToggle);
-  }, []);
-
-  const generateBotResponse = (userMessage: string): string => {
+  const generateMedxoResponse = (userMessage: string): { content: string; type?: 'info' | 'warning' | 'symptom-track' } => {
+    const intent = analyzeUserIntent(userMessage);
     const lowercaseMessage = userMessage.toLowerCase();
     
-    if (lowercaseMessage.includes('headache') || lowercaseMessage.includes('head pain')) {
-      return "For headaches, consider these remedies: Stay hydrated, rest in a quiet dark room, apply a cold compress, and consider over-the-counter pain relievers if appropriate. If headaches persist or worsen, please consult a healthcare provider.";
+    // Emergency situations
+    if (intent === 'emergency') {
+      return {
+        content: "⚠️ If this is a medical emergency, please call 911 or go to your nearest emergency room immediately. I'm designed to help with general health information and cannot handle emergency situations. Your safety is the top priority.\n\n**Disclaimer:** This information is for educational purposes only and is not a substitute for professional medical advice.",
+        type: 'warning'
+      };
+    }
+
+    // Symptom tracking
+    if (intent === 'symptom-track' || lowercaseMessage.includes('track')) {
+      return {
+        content: "I can help you track your symptoms! To provide the best guidance, could you please tell me:\n\n1. **What symptoms are you experiencing?** (e.g., headache, fever, cough)\n2. **How severe are they?** (mild, moderate, severe)\n3. **How long have you had them?** (hours, days, weeks)\n4. **Any triggers or recent changes?**\n\nThis will help me provide more personalized recommendations and track patterns in your health.\n\n**Disclaimer:** This information is for educational and support purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Please consult a doctor for medical concerns.",
+        type: 'symptom-track'
+      };
+    }
+
+    // Wound care
+    if (intent === 'wound-care') {
+      if (lowercaseMessage.includes('cut') || lowercaseMessage.includes('finger')) {
+        return {
+          content: "🩹 **For a small cut on your finger:**\n\n**Immediate Care:**\n1. Clean your hands thoroughly\n2. Apply gentle pressure to stop bleeding\n3. Rinse the cut with clean water\n4. Pat dry with a clean cloth\n\n**Treatment:**\n• Apply antibiotic ointment (like Neosporin)\n• Cover with a sterile bandage\n• Change bandage daily\n\n**OTC Medications:**\n• Ibuprofen (200-400mg) for pain if needed\n• Topical antibiotic cream\n\n**See a doctor if:** The cut is deep, won't stop bleeding, shows signs of infection (redness, warmth, pus), or if you're unsure about tetanus vaccination.\n\n**Disclaimer:** This information is for educational and support purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Please consult a doctor for medical concerns."
+        };
+      }
+      
+      if (lowercaseMessage.includes('burn')) {
+        return {
+          content: "🔥 **For minor burns:**\n\n**Immediate Care:**\n1. Cool the burn with cool (not ice cold) water for 10-20 minutes\n2. Remove jewelry/tight items before swelling\n3. Don't break blisters if they form\n\n**Treatment:**\n• Apply aloe vera gel or cool moisturizer\n• Cover loosely with sterile gauze\n• Take pain relievers if needed\n\n**OTC Options:**\n• Ibuprofen (200-400mg) for pain and inflammation\n• Acetaminophen for pain relief\n• Aloe vera gel for cooling relief\n\n**Seek immediate medical help if:** The burn is larger than 3 inches, on face/hands/feet/genitals, looks infected, or if you have fever.\n\n**Disclaimer:** This information is for educational and support purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Please consult a doctor for medical concerns."
+        };
+      }
+    }
+
+    // Allergy responses
+    if (lowercaseMessage.includes('eyes') || lowercaseMessage.includes('itchy')) {
+      return {
+        content: "👁️ **For itchy, watery eyes (likely allergies):**\n\n**Immediate Relief:**\n• Rinse eyes with cool, clean water\n• Apply cool compress for 10-15 minutes\n• Avoid rubbing your eyes\n• Remove/avoid known allergens\n\n**OTC Medications:**\n• **Antihistamine eye drops:** Ketotifen (Zaditor) - 1 drop twice daily\n• **Oral antihistamines:** \n  - Loratadine (Claritin) 10mg once daily\n  - Cetirizine (Zyrtec) 10mg once daily\n  - Diphenhydramine (Benadryl) 25-50mg every 6 hours (may cause drowsiness)\n\n**Additional Tips:**\n• Use preservative-free artificial tears\n• Keep windows closed during high pollen days\n• Wash hands frequently\n\n**See a doctor if:** Symptoms worsen, vision changes, severe swelling, or no improvement after 2-3 days.\n\n**Disclaimer:** This information is for educational and support purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Please consult a doctor for medical concerns."
+      };
+    }
+
+    if (lowercaseMessage.includes('skin') || lowercaseMessage.includes('rash')) {
+      return {
+        content: "🧴 **For allergic skin reactions:**\n\n**Immediate Care:**\n• Identify and remove the trigger if possible\n• Rinse affected area with cool water\n• Pat dry gently - don't rub\n• Avoid scratching\n\n**Home Remedies:**\n• Cool compresses for 15-20 minutes\n• Oatmeal baths (colloidal oatmeal)\n• Aloe vera gel (pure, no additives)\n• Calamine lotion for drying effect\n\n**OTC Medications:**\n• **Topical:** Hydrocortisone cream 1% (apply thin layer 2-3 times daily)\n• **Oral antihistamines:**\n  - Cetirizine 10mg daily\n  - Loratadine 10mg daily\n  - Diphenhydramine 25-50mg every 6 hours\n\n**See a doctor if:** Rash spreads rapidly, severe swelling, difficulty breathing, fever, or signs of infection.\n\n**Disclaimer:** This information is for educational and support purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Please consult a doctor for medical concerns."
+      };
     }
     
-    if (lowercaseMessage.includes('fever') || lowercaseMessage.includes('temperature')) {
-      return "For fever management: Rest, stay hydrated, dress lightly, and monitor your temperature. Consider acetaminophen or ibuprofen if appropriate. Seek medical attention if fever exceeds 103°F (39.4°C) or persists for more than 3 days.";
+    if (lowercaseMessage.includes('headache')) {
+      return {
+        content: "🤕 **For headaches:**\n\n**Common Causes:**\n• Tension, stress, dehydration\n• Eye strain, poor posture\n• Lack of sleep, hunger\n• Sinus congestion\n\n**Home Remedies:**\n• Rest in a quiet, dark room\n• Apply cold or warm compress\n• Stay hydrated (8+ glasses water)\n• Gentle neck and shoulder massage\n• Practice relaxation techniques\n\n**OTC Medications:**\n• **Acetaminophen:** 650-1000mg every 6 hours (max 3000mg/day)\n• **Ibuprofen:** 400-600mg every 6-8 hours (max 1200mg/day)\n• **Aspirin:** 650-1000mg every 4 hours\n\n**See a doctor if:** Sudden severe headache, headache with fever/stiff neck, vision changes, or headaches becoming more frequent/severe.\n\n**Disclaimer:** This information is for educational and support purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Please consult a doctor for medical concerns."
+      };
     }
-    
+
+    if (lowercaseMessage.includes('fever')) {
+      return {
+        content: "🌡️ **For fever management:**\n\n**Home Care:**\n• Rest and stay hydrated\n• Dress in light, breathable clothing\n• Room temperature baths or cool washcloths\n• Monitor temperature regularly\n\n**OTC Medications:**\n• **Acetaminophen:** 650-1000mg every 6 hours\n• **Ibuprofen:** 400-600mg every 6-8 hours\n• **Note:** Don't alternate medications without consulting a healthcare provider\n\n**Hydration:**\n• Water, clear broths, electrolyte solutions\n• Avoid alcohol and caffeine\n\n**Seek immediate medical care if:**\n• Fever over 103°F (39.4°C)\n• Fever with severe headache, stiff neck, confusion\n• Difficulty breathing or chest pain\n• Persistent vomiting\n• Signs of dehydration\n\n**Disclaimer:** This information is for educational and support purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Please consult a doctor for medical concerns."
+      };
+    }
+
     if (lowercaseMessage.includes('cough')) {
-      return "For cough relief: Stay hydrated, use honey (for ages 1+), try warm saltwater gargles, use a humidifier, and avoid irritants. If cough persists more than 2 weeks or includes blood, consult a healthcare provider.";
+      return {
+        content: "😷 **For cough relief:**\n\n**Types & Care:**\n• **Dry cough:** Honey, throat lozenges, humidifier\n• **Productive cough:** Stay hydrated, don't suppress completely\n\n**Home Remedies:**\n• Honey (1-2 teaspoons) - not for children under 1 year\n• Warm saltwater gargles\n• Herbal teas with honey\n• Use a humidifier or breathe steam\n\n**OTC Options:**\n• **Dextromethorphan** (Robitussin DM) for dry cough\n• **Guaifenesin** (Mucinex) for productive cough\n• **Throat lozenges** with menthol\n• **Honey-based cough drops**\n\n**See a doctor if:**\n• Cough lasts more than 2-3 weeks\n• Coughing up blood\n• High fever, difficulty breathing\n• Chest pain or wheezing\n\n**Disclaimer:** This information is for educational and support purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Please consult a doctor for medical concerns."
+      };
     }
-    
-    if (lowercaseMessage.includes('rash') || lowercaseMessage.includes('skin')) {
-      return "For skin irritation: Keep the area clean and dry, avoid scratching, apply cool compresses, and consider using unscented moisturizers. If rash spreads, is accompanied by fever, or doesn't improve in a few days, seek medical attention.";
-    }
-    
-    if (lowercaseMessage.includes('nausea') || lowercaseMessage.includes('sick')) {
-      return "For nausea: Try small sips of clear fluids, eat bland foods like crackers or toast, rest, and avoid strong odors. Ginger tea or peppermint may help. If vomiting persists or you show signs of dehydration, consult a healthcare provider.";
-    }
-    
-    if (lowercaseMessage.includes('pain') || lowercaseMessage.includes('hurt')) {
-      return "For general pain management: Rest the affected area, apply ice for acute injuries or heat for muscle tension, consider over-the-counter pain relievers if appropriate, and gentle stretching may help. For severe or persistent pain, please consult a healthcare provider.";
-    }
-    
-    if (lowercaseMessage.includes('emergency') || lowercaseMessage.includes('urgent')) {
-      return "If this is a medical emergency, please call 911 or go to your nearest emergency room immediately. I'm here for general health information only and cannot handle emergency situations.";
-    }
-    
-    return "I understand you're looking for health guidance. While I can provide general wellness information, I recommend consulting with a healthcare provider for personalized medical advice. Can you tell me more about your specific symptoms or concerns?";
+
+    // Default response
+    return {
+      content: "I'm here to help with your health concerns! I can assist with:\n\n🩹 **Wound care** - cuts, burns, scrapes\n🤧 **Common symptoms** - headaches, fever, cough\n💊 **OTC medication guidance** - safe usage and dosages\n👁️ **Allergy support** - skin reactions, seasonal allergies\n📝 **Symptom tracking** - monitoring your health patterns\n\nCould you tell me more about your specific concern? For example:\n• \"I have a small cut on my finger\"\n• \"Track my symptoms: sore throat and headache\"\n• \"My eyes are itchy - what can I take?\"\n\nThis will help me provide more targeted guidance.\n\n**Disclaimer:** This information is for educational and support purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Please consult a doctor for medical concerns.",
+      type: 'info'
+    };
   };
 
   const handleSendMessage = async () => {
@@ -96,18 +148,20 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate bot thinking time
+    // Simulate thinking time for more realistic interaction
     setTimeout(() => {
+      const response = generateMedxoResponse(inputMessage);
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: generateBotResponse(inputMessage),
+        content: response.content,
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        type: response.type
       };
 
       setMessages(prev => [...prev, botResponse]);
       setIsTyping(false);
-    }, 1000 + Math.random() * 2000);
+    }, 1500 + Math.random() * 2000);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -123,6 +177,24 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
       minute: '2-digit'
     });
   };
+
+  // Listen for toggle events from dashboard
+  useEffect(() => {
+    const handleToggle = () => {
+      setIsOpen(prev => !prev);
+    };
+
+    window.addEventListener('medxo-chat-toggle', handleToggle);
+    return () => window.removeEventListener('medxo-chat-toggle', handleToggle);
+  }, []);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   if (!isOpen) {
     return (
@@ -163,23 +235,38 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
                 className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
+                  className={`max-w-[85%] rounded-lg p-3 ${
                     message.sender === 'user'
                       ? 'bg-primary text-white'
+                      : message.type === 'warning'
+                      ? 'bg-red-50 border border-red-200 text-red-900'
+                      : message.type === 'symptom-track'
+                      ? 'bg-blue-50 border border-blue-200 text-blue-900'
                       : 'bg-gray-100 text-gray-900'
                   }`}
                 >
                   <div className="flex items-start gap-2">
                     {message.sender === 'bot' && (
-                      <Bot className="h-4 w-4 mt-0.5 text-primary" />
+                      <Bot className={`h-4 w-4 mt-0.5 ${
+                        message.type === 'warning' ? 'text-red-500' : 
+                        message.type === 'symptom-track' ? 'text-blue-500' : 'text-primary'
+                      }`} />
                     )}
                     {message.sender === 'user' && (
                       <User className="h-4 w-4 mt-0.5" />
                     )}
                     <div className="flex-1">
-                      <p className="text-sm">{message.content}</p>
-                      <p className={`text-xs mt-1 ${
-                        message.sender === 'user' ? 'text-white/70' : 'text-gray-500'
+                      {message.type === 'warning' && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertTriangle className="h-4 w-4 text-red-500" />
+                          <span className="text-sm font-semibold text-red-700">Important Safety Notice</span>
+                        </div>
+                      )}
+                      <div className="text-sm whitespace-pre-line">{message.content}</div>
+                      <p className={`text-xs mt-2 ${
+                        message.sender === 'user' ? 'text-white/70' : 
+                        message.type === 'warning' ? 'text-red-600' :
+                        message.type === 'symptom-track' ? 'text-blue-600' : 'text-gray-500'
                       }`}>
                         {formatTime(message.timestamp)}
                       </p>
@@ -194,10 +281,13 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
                 <div className="bg-gray-100 rounded-lg p-3 max-w-[80%]">
                   <div className="flex items-center gap-2">
                     <Bot className="h-4 w-4 text-primary" />
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm text-gray-600">Medxo is thinking</span>
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -214,7 +304,7 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                placeholder="Describe your symptoms or health concern..."
                 className="flex-1"
                 disabled={isTyping}
               />
@@ -226,9 +316,14 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
                 <Send className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              For emergencies, call 911. This is not a substitute for professional medical advice.
-            </p>
+            <div className="mt-2">
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  For emergencies, call 911. This is not a substitute for professional medical advice.
+                </AlertDescription>
+              </Alert>
+            </div>
           </div>
         </CardContent>
       </Card>
