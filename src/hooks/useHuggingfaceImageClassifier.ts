@@ -22,19 +22,15 @@ export const useHuggingfaceImageClassifier = () => {
   const classify = async (file: File): Promise<{ label: string; score: number }[]> => {
     await loadModel();
 
-    // Create Image element for pipeline
+    // Pass the file's object URL directly to the pipeline (works with Huggingface transformers.js)
     const url = URL.createObjectURL(file);
-    const img = document.createElement("img");
-    img.src = url;
 
-    // Wait for image to load
-    await new Promise((res, rej) => {
-      img.onload = res;
-      img.onerror = rej;
-    });
+    // Run prediction (use string url directly)
+    const results = await classifierRef.current(url);
 
-    // Run prediction
-    const results = await classifierRef.current(img);
+    // Free up the object URL
+    URL.revokeObjectURL(url);
+
     // results: [{ label: "skin", score: 0.9 }, ...]
     return results;
   };
