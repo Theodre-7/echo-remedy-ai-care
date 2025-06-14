@@ -194,7 +194,7 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isTyping]);
 
   if (!isOpen) {
     return (
@@ -209,7 +209,7 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-96 h-[500px] flex flex-col">
+    <div className="fixed bottom-6 right-6 z-50 w-96 h-[600px] flex flex-col">
       <Card className="flex-1 flex flex-col shadow-2xl">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 bg-primary text-white rounded-t-lg">
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -226,9 +226,9 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
           </Button>
         </CardHeader>
         
-        <CardContent className="flex-1 flex flex-col p-0">
-          {/* Messages Container */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <CardContent className="flex-1 flex flex-col p-0 min-h-0">
+          {/* Messages Container - Fixed height with scroll */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -247,22 +247,22 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
                 >
                   <div className="flex items-start gap-2">
                     {message.sender === 'bot' && (
-                      <Bot className={`h-4 w-4 mt-0.5 ${
+                      <Bot className={`h-4 w-4 mt-0.5 flex-shrink-0 ${
                         message.type === 'warning' ? 'text-red-500' : 
                         message.type === 'symptom-track' ? 'text-blue-500' : 'text-primary'
                       }`} />
                     )}
                     {message.sender === 'user' && (
-                      <User className="h-4 w-4 mt-0.5" />
+                      <User className="h-4 w-4 mt-0.5 flex-shrink-0" />
                     )}
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       {message.type === 'warning' && (
                         <div className="flex items-center gap-2 mb-2">
-                          <AlertTriangle className="h-4 w-4 text-red-500" />
+                          <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
                           <span className="text-sm font-semibold text-red-700">Important Safety Notice</span>
                         </div>
                       )}
-                      <div className="text-sm whitespace-pre-line">{message.content}</div>
+                      <div className="text-sm whitespace-pre-line break-words">{message.content}</div>
                       <p className={`text-xs mt-2 ${
                         message.sender === 'user' ? 'text-white/70' : 
                         message.type === 'warning' ? 'text-red-600' :
@@ -280,7 +280,7 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
               <div className="flex justify-start">
                 <div className="bg-gray-100 rounded-lg p-3 max-w-[80%]">
                   <div className="flex items-center gap-2">
-                    <Bot className="h-4 w-4 text-primary" />
+                    <Bot className="h-4 w-4 text-primary flex-shrink-0" />
                     <div className="flex items-center gap-1">
                       <span className="text-sm text-gray-600">Medxo is thinking</span>
                       <div className="flex space-x-1">
@@ -297,8 +297,8 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
             <div ref={messagesEndRef} />
           </div>
           
-          {/* Input Container */}
-          <div className="border-t p-4">
+          {/* Input Container - Fixed at bottom */}
+          <div className="border-t p-4 flex-shrink-0">
             <div className="flex gap-2">
               <Input
                 value={inputMessage}
@@ -312,6 +312,7 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
                 onClick={handleSendMessage}
                 disabled={!inputMessage.trim() || isTyping}
                 size="sm"
+                className="flex-shrink-0"
               >
                 <Send className="h-4 w-4" />
               </Button>
