@@ -1,9 +1,35 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, Shield, Utensils, Moon, Dumbbell, Brain } from 'lucide-react';
+
+const getDailyTip = () => {
+  // Flatten all tips with category references
+  const allTips: { category: string; tip: string }[] = [];
+  tipCategories.forEach((cat) => {
+    cat.tips.forEach((tip) => {
+      allTips.push({ category: cat.title, tip });
+    });
+  });
+
+  // Use today date (YYYY-MM-DD) as seed & index
+  const now = new Date();
+  const dayOfYear =
+    Math.floor(
+      (Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) -
+        Date.UTC(now.getFullYear(), 0, 0)) /
+        24 / 60 / 60 / 1000
+    );
+  const index = dayOfYear % allTips.length;
+  const selected = allTips[index];
+
+  return {
+    title: "Today's Featured Tip",
+    content: selected.tip,
+    category: selected.category,
+  };
+};
 
 const HealthTips = () => {
   const { user } = useAuth();
@@ -71,11 +97,7 @@ const HealthTips = () => {
     }
   ];
 
-  const dailyTip = {
-    title: "Today's Featured Tip",
-    content: "Start your day with 10 deep breaths. This simple practice can reduce stress, improve focus, and boost your immune system. Inhale for 4 counts, hold for 4, and exhale for 6.",
-    category: "Wellness"
-  };
+  const dailyTip = getDailyTip();
 
   return (
     <div className="min-h-screen bg-gray-50">
