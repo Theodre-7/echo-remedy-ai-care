@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
+import ChatMessage from "./ChatMessage";
+import TypingIndicator from "./TypingIndicator";
+import ChatInput from "./ChatInput";
 
 interface Message {
   id: string;
@@ -169,88 +172,21 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
           {/* Messages Container - Scrollable area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 max-h-[400px]">
             {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-lg p-3 ${
-                    message.sender === 'user'
-                      ? 'bg-primary text-white'
-                      : message.type === 'warning'
-                      ? 'bg-red-50 border border-red-200 text-red-900'
-                      : message.type === 'error'
-                      ? 'bg-red-50 border border-red-200 text-red-900'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
-                >
-                  <div className="flex items-start gap-2">
-                    {message.sender === 'bot' && (
-                      <Bot className={`h-4 w-4 mt-0.5 flex-shrink-0 text-primary`} />
-                    )}
-                    {message.sender === 'user' && (
-                      <User className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      {message.type === 'error' && (
-                        <div className="flex items-center gap-2 mb-2">
-                          <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
-                          <span className="text-sm font-semibold text-red-700">Error</span>
-                        </div>
-                      )}
-                      <div className="text-sm whitespace-pre-line break-words">{message.content}</div>
-                      <p className={`text-xs mt-2 ${
-                        message.sender === 'user' ? 'text-white/70' : 'text-gray-500'
-                      }`}>
-                        {formatTime(message.timestamp)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <ChatMessage key={message.id} message={message} formatTime={formatTime} />
             ))}
-            
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg p-3 max-w-[80%]">
-                  <div className="flex items-center gap-2">
-                    <Bot className="h-4 w-4 text-primary flex-shrink-0" />
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm text-gray-600">Medxo is thinking</span>
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
+            {isTyping && <TypingIndicator />}
             <div ref={messagesEndRef} />
           </div>
           
           {/* Input Container - Always visible at bottom */}
           <div className="border-t bg-white p-4 flex-shrink-0">
-            <div className="flex gap-2 mb-2">
-              <Input
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Describe your symptoms, upload a photo (coming soon!), or ask any health question..."
-                className="flex-1"
-                disabled={isTyping}
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!inputMessage.trim() || isTyping}
-                size="sm"
-                className="flex-shrink-0"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
+            <ChatInput
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              isTyping={isTyping}
+              onSend={handleSendMessage}
+              onKeyPress={handleKeyPress}
+            />
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="text-xs">
