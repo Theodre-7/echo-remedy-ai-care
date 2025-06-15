@@ -21,8 +21,6 @@ interface MedxoChatbotProps {
   autoShow?: boolean;
 }
 
-const EDGE_FUNCTION_URL = `https://ltipykptfpyxremksjgo.functions.supabase.co/openrouter-medical-assistant`;
-
 const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
   const [isOpen, setIsOpen] = useState(autoShow);
   const [messages, setMessages] = useState<Message[]>([
@@ -53,27 +51,17 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
     setIsTyping(true);
 
     try {
-      // Get access token
-      const session = await supabase.auth.getSession();
-      const accessToken =
-        typeof session.data?.session?.access_token === 'string'
-        ? session.data?.session?.access_token
-        : null;
-
-      // 2. Call Edge Function with the user's message
-      const resp = await fetch(EDGE_FUNCTION_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
-        },
-        body: JSON.stringify({
-          image_url: null, // Only supporting text for now
+      // 2. Call Edge Function using supabase.functions.invoke
+      const { data, error: invokeError } = await supabase.functions.invoke('openrouter-medical-assistant', {
+        body: {
+          image_url: null,
           user_text: text
-        })
+        }
       });
 
-      const data = await resp.json();
+      if (invokeError) {
+        throw invokeError;
+      }
 
       // Parse and structure AI response
       let botContent = '';
@@ -86,9 +74,6 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
         botContent = "Sorry, I didn't get a valid response from the medical assistant.";
       }
 
-      // Check if response is in expected Medxo format.
-      // For future-proofing, you may later parse and format sections if the API provides markdown or JSON blocks.
-
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: botContent,
@@ -99,6 +84,7 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
 
       setMessages(prev => [...prev, botMessage]);
     } catch (e: any) {
+      console.error("Chatbot sendMessage error:", e);
       setMessages(prev => [
         ...prev,
         {
