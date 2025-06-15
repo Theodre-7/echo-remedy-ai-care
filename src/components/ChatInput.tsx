@@ -24,7 +24,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       value={inputMessage}
       onChange={(e) => setInputMessage(e.target.value)}
       onKeyPress={onKeyPress}
-      placeholder="Describe your symptoms, upload a photo (coming soon!), or ask any health question..."
+      placeholder="Describe your symptoms or ask any health question..."
       className="flex-1"
       disabled={isTyping}
     />
