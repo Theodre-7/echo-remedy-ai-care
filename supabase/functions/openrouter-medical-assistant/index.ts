@@ -59,7 +59,7 @@ serve(async (req) => {
     let model, messages;
 
     if (image_url) {
-      model = "google/gemini-pro-vision";
+      model = "google/gemini-flash-1.5"; // Updated model
       messages = [
         { role: "system", content: IMAGE_SYSTEM_PROMPT },
         {
@@ -71,7 +71,7 @@ serve(async (req) => {
         }
       ];
     } else if (user_text) {
-      model = "google/gemini-pro";
+      model = "google/gemini-flash-1.5"; // Updated model
       messages = [
         { role: "system", content: TEXT_SYSTEM_PROMPT },
         { role: "user", content: user_text }
