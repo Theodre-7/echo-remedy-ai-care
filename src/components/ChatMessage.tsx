@@ -1,6 +1,8 @@
 
 import React from "react";
 import { Bot, User, AlertTriangle } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface ChatMessageProps {
   message: {
@@ -41,7 +43,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, formatTime }) => {
                 <span className="text-sm font-semibold text-red-700">Error</span>
               </div>
             )}
-            <div className="text-sm whitespace-pre-line break-words">{message.content}</div>
+            {message.sender === 'bot' ? (
+              <div className="text-sm break-words prose prose-sm max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {message.content}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <div className="text-sm whitespace-pre-line break-words">{message.content}</div>
+            )}
             <p
               className={`text-xs mt-2 ${
                 message.sender === 'user' ? 'text-white/70' : 'text-gray-500'
