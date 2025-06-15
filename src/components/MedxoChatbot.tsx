@@ -53,14 +53,14 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
     setIsTyping(true);
 
     try {
-      // ---- NEW: get current access token
+      // Get access token
       const session = await supabase.auth.getSession();
       const accessToken =
         typeof session.data?.session?.access_token === 'string'
         ? session.data?.session?.access_token
         : null;
 
-      // 2. Call OpenRouter Edge Function with user's message, using Authorization header
+      // 2. Call Edge Function with the user's message
       const resp = await fetch(EDGE_FUNCTION_URL, {
         method: 'POST',
         headers: {
@@ -68,12 +68,14 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
           ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
         },
         body: JSON.stringify({
-          image_url: null,
+          image_url: null, // Only supporting text for now
           user_text: text
         })
       });
+
       const data = await resp.json();
 
+      // Parse and structure AI response
       let botContent = '';
 
       if (data?.result) {
@@ -83,6 +85,10 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
       } else {
         botContent = "Sorry, I didn't get a valid response from the medical assistant.";
       }
+
+      // Check if response is in expected Medxo format.
+      // For future-proofing, you may later parse and format sections if the API provides markdown or JSON blocks.
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: botContent,
