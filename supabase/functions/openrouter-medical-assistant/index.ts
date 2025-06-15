@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -47,11 +46,11 @@ serve(async (req) => {
   try {
     if (!OPENROUTER_API_KEY) throw new Error("Missing OPENROUTER_API_KEY");
 
-    const { image_url, user_text } = await req.json();
+    const { image_url, user_text, conversation } = await req.json();
 
-    if (!image_url && !user_text) {
+    if (!image_url && !user_text && !conversation) {
       return new Response(
-        JSON.stringify({ error: "Missing image_url or user_text" }),
+        JSON.stringify({ error: "Missing image_url, user_text, or conversation" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -69,6 +68,12 @@ serve(async (req) => {
             { type: "image_url", image_url: { url: image_url } }
           ]
         }
+      ];
+    } else if (conversation) {
+      model = "google/gemini-flash-1.5"; // Updated model
+      messages = [
+        { role: "system", content: TEXT_SYSTEM_PROMPT },
+        ...conversation
       ];
     } else if (user_text) {
       model = "google/gemini-flash-1.5"; // Updated model

@@ -46,16 +46,26 @@ const MedxoChatbot = ({ autoShow = false }: MedxoChatbotProps) => {
       sender: 'user',
       timestamp: new Date()
     };
-    setMessages(prev => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInputMessage('');
     setIsTyping(true);
 
+    // Prepare conversation history, excluding the initial welcome message and keeping the last 10 messages for context.
+    const conversationForApi = newMessages
+      .slice(1)
+      .map(msg => ({
+        role: msg.sender === 'bot' ? 'assistant' : 'user',
+        content: msg.content
+      }))
+      .slice(-10);
+
     try {
-      // 2. Call Edge Function using supabase.functions.invoke
+      // 2. Call Edge Function with conversation history
       const { data, error: invokeError } = await supabase.functions.invoke('openrouter-medical-assistant', {
         body: {
           image_url: null,
-          user_text: text
+          conversation: conversationForApi
         }
       });
 
