@@ -1,13 +1,13 @@
-
 import React, { useState } from 'react';
 import { Camera, MessageCircle, History, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import Modal from '@/components/Modal';
-
 const LandingHero = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const navigate = useNavigate();
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -18,7 +18,6 @@ const LandingHero = () => {
     title: '',
     content: ''
   });
-
   const handleGetStarted = () => {
     if (user) {
       navigate('/scan');
@@ -26,23 +25,29 @@ const LandingHero = () => {
       navigate('/auth');
     }
   };
-
   const handleLearnMore = () => {
     // Scroll to features section or navigate to about page
     const featuresSection = document.querySelector('#features');
     if (featuresSection) {
-      featuresSection.scrollIntoView({ behavior: 'smooth' });
+      featuresSection.scrollIntoView({
+        behavior: 'smooth'
+      });
     }
   };
-
   const openModal = (title: string, content: string) => {
-    setModalState({ isOpen: true, title, content });
+    setModalState({
+      isOpen: true,
+      title,
+      content
+    });
   };
-
   const closeModal = () => {
-    setModalState({ isOpen: false, title: '', content: '' });
+    setModalState({
+      isOpen: false,
+      title: '',
+      content: ''
+    });
   };
-
   const aboutUsContent = `Developed by: **Sanjeevi Ram**
 
 🔗 LinkedIn: https://www.linkedin.com/in/sanjeevi-ram-274947298/
@@ -59,7 +64,6 @@ const LandingHero = () => {
 - Personalized home remedies for symptoms
 - Interactive health journals
 - Daily health & wellness tips`;
-
   const privacyPolicyContent = `EchoRemedy respects your privacy. This page outlines how we handle your data:
 
 - Uploaded photos are stored securely and used only for analysis purposes.
@@ -69,7 +73,6 @@ const LandingHero = () => {
 - You can delete your data anytime by contacting support.
 
 By using EchoRemedy, you agree to the collection and usage of your data in accordance with this policy.`;
-
   const termsOfServiceContent = `By using EchoRemedy, you agree to the following terms:
 
 - The AI-generated outputs (remedies, suggestions, urgency levels) are mock and **not a substitute for professional medical advice**.
@@ -79,32 +82,24 @@ By using EchoRemedy, you agree to the collection and usage of your data in accor
 - Users must be 13 years or older to use the platform.
 
 For medical emergencies, consult a licensed healthcare provider immediately.`;
-
-  const features = [
-    {
-      icon: Camera,
-      title: 'AI Image Analysis',
-      description: 'Upload photos of symptoms and get instant AI-powered analysis with remedy suggestions.'
-    },
-    {
-      icon: MessageCircle,
-      title: 'Medxo Chatbot',
-      description: 'Chat with our medical assistant for personalized advice and symptom guidance.'
-    },
-    {
-      icon: History,
-      title: 'Symptom History',
-      description: 'Track your health journey with detailed records of past symptoms and treatments.'
-    },
-    {
-      icon: Shield,
-      title: 'Safe & Secure',
-      description: 'Your health data is protected with enterprise-grade security and privacy.'
-    }
-  ];
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+  const features = [{
+    icon: Camera,
+    title: 'AI Image Analysis',
+    description: 'Upload photos of symptoms and get instant AI-powered analysis with remedy suggestions.'
+  }, {
+    icon: MessageCircle,
+    title: 'Medxo Chatbot',
+    description: 'Chat with our medical assistant for personalized advice and symptom guidance.'
+  }, {
+    icon: History,
+    title: 'Symptom History',
+    description: 'Track your health journey with detailed records of past symptoms and treatments.'
+  }, {
+    icon: Shield,
+    title: 'Safe & Secure',
+    description: 'Your health data is protected with enterprise-grade security and privacy.'
+  }];
+  return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Hero Section */}
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -118,19 +113,10 @@ For medical emergencies, consult a licensed healthcare provider immediately.`;
               remedy suggestions, urgency ratings, and professional guidance.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button 
-                size="lg" 
-                className="bg-primary hover:bg-primary/90 text-lg px-8 py-3 animate-scale-in"
-                onClick={handleGetStarted}
-              >
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 py-3 animate-scale-in" onClick={handleGetStarted}>
                 {user ? 'Start Scanning' : 'Get Started Free'}
               </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="text-lg px-8 py-3 animate-scale-in"
-                onClick={handleLearnMore}
-              >
+              <Button variant="outline" size="lg" className="text-lg px-8 py-3 animate-scale-in" onClick={handleLearnMore}>
                 Learn More
               </Button>
             </div>
@@ -170,12 +156,9 @@ For medical emergencies, consult a licensed healthcare provider immediately.`;
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <div
-                key={feature.title}
-                className="medical-card text-center animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
+            {features.map((feature, index) => <div key={feature.title} className="medical-card text-center animate-fade-in" style={{
+            animationDelay: `${index * 0.1}s`
+          }}>
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <feature.icon className="w-8 h-8 text-primary" />
                 </div>
@@ -185,8 +168,7 @@ For medical emergencies, consult a licensed healthcare provider immediately.`;
                 <p className="text-muted-foreground">
                   {feature.description}
                 </p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </div>
@@ -200,12 +182,7 @@ For medical emergencies, consult a licensed healthcare provider immediately.`;
           <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
             Join thousands of users who trust EchoRemedy for quick, reliable health guidance
           </p>
-          <Button 
-            size="lg" 
-            variant="secondary" 
-            className="text-lg px-8 py-3 bg-white text-primary hover:bg-white/90"
-            onClick={handleGetStarted}
-          >
+          <Button size="lg" variant="secondary" className="text-lg px-8 py-3 bg-white text-primary hover:bg-white/90" onClick={handleGetStarted}>
             {user ? 'Go to Dashboard' : 'Start Your Health Journey'}
           </Button>
         </div>
@@ -225,26 +202,17 @@ For medical emergencies, consult a licensed healthcare provider immediately.`;
               <h4 className="font-semibold mb-3">Quick Links</h4>
               <ul className="space-y-2 text-gray-300">
                 <li>
-                  <button 
-                    onClick={() => openModal('About Us', aboutUsContent)}
-                    className="hover:text-primary transition-colors cursor-pointer"
-                  >
+                  <button onClick={() => openModal('About Us', aboutUsContent)} className="hover:text-primary transition-colors cursor-pointer">
                     About Us
                   </button>
                 </li>
                 <li>
-                  <button 
-                    onClick={() => openModal('Privacy Policy', privacyPolicyContent)}
-                    className="hover:text-primary transition-colors cursor-pointer"
-                  >
+                  <button onClick={() => openModal('Privacy Policy', privacyPolicyContent)} className="hover:text-primary transition-colors cursor-pointer">
                     Privacy Policy
                   </button>
                 </li>
                 <li>
-                  <button 
-                    onClick={() => openModal('Terms of Service', termsOfServiceContent)}
-                    className="hover:text-primary transition-colors cursor-pointer"
-                  >
+                  <button onClick={() => openModal('Terms of Service', termsOfServiceContent)} className="hover:text-primary transition-colors cursor-pointer">
                     Terms of Service
                   </button>
                 </li>
@@ -253,8 +221,8 @@ For medical emergencies, consult a licensed healthcare provider immediately.`;
             <div>
               <h4 className="font-semibold mb-3">Contact</h4>
               <ul className="space-y-2 text-gray-300">
-                <li>support@echoremedy.com</li>
-                <li>1-800-ECHO-REM</li>
+                <li>sanjeeviram@gmail.com</li>
+                <li>Made with Care</li>
                 <li>24/7 Support</li>
               </ul>
             </div>
@@ -265,14 +233,7 @@ For medical emergencies, consult a licensed healthcare provider immediately.`;
         </div>
       </footer>
 
-      <Modal
-        title={modalState.title}
-        content={modalState.content}
-        isOpen={modalState.isOpen}
-        onClose={closeModal}
-      />
-    </div>
-  );
+      <Modal title={modalState.title} content={modalState.content} isOpen={modalState.isOpen} onClose={closeModal} />
+    </div>;
 };
-
 export default LandingHero;
