@@ -6,9 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Camera, MessageCircle, FileText, TrendingUp, Calendar, Clock, Target, History, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { scheduleWellnessReminder } from '@/services/wellnessReminderService';
+import { exportHealthData, downloadHealthDataAsJSON, downloadHealthReportAsText } from '@/services/healthDataExportService';
+import { useToast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [stats, setStats] = useState({
     totalScans: 0,
     journalEntries: 0,
@@ -54,6 +58,53 @@ const Dashboard = () => {
     } else {
       // Fallback: dispatch custom event
       window.dispatchEvent(new CustomEvent('medxo-chat-toggle'));
+    }
+  };
+
+  const handleScheduleWellnessReminder = async () => {
+    if (!user) return;
+
+    try {
+      const userEmail = user.email;
+      const userName = user.user_metadata?.full_name || 'there';
+      
+      await scheduleWellnessReminder(userEmail!, userName);
+      
+      toast({
+        title: "Wellness Reminder Scheduled",
+        description: "You'll receive a daily wellness reminder via email!",
+      });
+    } catch (error) {
+      console.error('Error scheduling wellness reminder:', error);
+      toast({
+        title: "Error",
+        description: "Failed to schedule wellness reminder. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportHealthData = async () => {
+    if (!user) return;
+
+    try {
+      const healthData = await exportHealthData(user.id);
+      
+      // Download both JSON and text report
+      downloadHealthDataAsJSON(healthData);
+      downloadHealthReportAsText(healthData);
+      
+      toast({
+        title: "Health Data Exported",
+        description: "Your health data has been downloaded successfully!",
+      });
+    } catch (error) {
+      console.error('Error exporting health data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to export health data. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -219,7 +270,11 @@ const Dashboard = () => {
                 <div className="space-y-4">
                   <h4 className="font-medium text-foreground">Quick Health Tools</h4>
                   <div className="space-y-3">
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={handleScheduleWellnessReminder}
+                    >
                       <Calendar className="w-4 h-4 mr-2" />
                       Schedule wellness reminder
                     </Button>
@@ -227,7 +282,11 @@ const Dashboard = () => {
                       <Clock className="w-4 h-4 mr-2" />
                       Set medication alert
                     </Button>
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={handleExportHealthData}
+                    >
                       <Download className="w-4 h-4 mr-2" />
                       Export health data
                     </Button>
