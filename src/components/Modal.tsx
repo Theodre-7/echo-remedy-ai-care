@@ -19,9 +19,7 @@ const Modal: React.FC<ModalProps> = ({
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <Linkedin className="w-5 h-5 text-blue-600" />
-            <a href="https://www.linkedin.com/in/sanjeevi-ram-274947298/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 transition-colors text-sm">
-              https://www.linkedin.com/in/sanjeevi-ram-274947298/
-            </a>
+            <a href="https://www.linkedin.com/in/sanjeevi-ram-274947298/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 transition-colors text-sm">https://www.linkedin.com/sanjeeviram</a>
           </div>
           <div className="flex items-center gap-3">
             <Twitter className="w-5 h-5 text-gray-800" />
