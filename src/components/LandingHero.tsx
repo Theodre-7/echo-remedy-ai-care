@@ -1,13 +1,23 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Camera, MessageCircle, History, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import Modal from '@/components/Modal';
 
 const LandingHero = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    content: string;
+  }>({
+    isOpen: false,
+    title: '',
+    content: ''
+  });
 
   const handleGetStarted = () => {
     if (user) {
@@ -24,6 +34,51 @@ const LandingHero = () => {
       featuresSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  const openModal = (title: string, content: string) => {
+    setModalState({ isOpen: true, title, content });
+  };
+
+  const closeModal = () => {
+    setModalState({ isOpen: false, title: '', content: '' });
+  };
+
+  const aboutUsContent = `Developed by: **Sanjeevi Ram**
+
+🔗 LinkedIn: https://www.linkedin.com/in/sanjeevi-ram-274947298/
+🔗 Twitter: https://x.com/sanjuxcoderx?s=21
+
+---
+
+🩺 **Other Services Offered by EchoRemedy**:
+- Upload photo & analyze the disease/infection
+- AI-generated summary of the condition
+- MedxoBot: Chat assistant for disorder queries & emergency guidance
+- Scan history tracking with timestamps
+- Downloadable health reports
+- Personalized home remedies for symptoms
+- Interactive health journals
+- Daily health & wellness tips`;
+
+  const privacyPolicyContent = `EchoRemedy respects your privacy. This page outlines how we handle your data:
+
+- Uploaded photos are stored securely and used only for analysis purposes.
+- Your chat interactions with MedxoBot are stored anonymously to improve service.
+- We do not share or sell your personal data to third parties.
+- Cookies may be used to enhance your experience and retain login/session info.
+- You can delete your data anytime by contacting support.
+
+By using EchoRemedy, you agree to the collection and usage of your data in accordance with this policy.`;
+
+  const termsOfServiceContent = `By using EchoRemedy, you agree to the following terms:
+
+- The AI-generated outputs (remedies, suggestions, urgency levels) are mock and **not a substitute for professional medical advice**.
+- Users are solely responsible for their health decisions based on app insights.
+- Misuse of the platform, including offensive queries or malicious uploads, will result in account suspension.
+- EchoRemedy reserves the right to modify or discontinue any part of the service without prior notice.
+- Users must be 13 years or older to use the platform.
+
+For medical emergencies, consult a licensed healthcare provider immediately.`;
 
   const features = [
     {
@@ -169,9 +224,30 @@ const LandingHero = () => {
             <div>
               <h4 className="font-semibold mb-3">Quick Links</h4>
               <ul className="space-y-2 text-gray-300">
-                <li><a href="#" className="hover:text-primary transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Terms of Service</a></li>
+                <li>
+                  <button 
+                    onClick={() => openModal('About Us', aboutUsContent)}
+                    className="hover:text-primary transition-colors cursor-pointer"
+                  >
+                    About Us
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => openModal('Privacy Policy', privacyPolicyContent)}
+                    className="hover:text-primary transition-colors cursor-pointer"
+                  >
+                    Privacy Policy
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => openModal('Terms of Service', termsOfServiceContent)}
+                    className="hover:text-primary transition-colors cursor-pointer"
+                  >
+                    Terms of Service
+                  </button>
+                </li>
               </ul>
             </div>
             <div>
@@ -188,6 +264,13 @@ const LandingHero = () => {
           </div>
         </div>
       </footer>
+
+      <Modal
+        title={modalState.title}
+        content={modalState.content}
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+      />
     </div>
   );
 };
